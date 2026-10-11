@@ -37,11 +37,11 @@ export const STATUS_MEANING: Record<ProjectStatus, string> = {
 }
 
 export const STATUS_COLOR: Record<ProjectStatus, string> = {
-  planning: '#7B6DB8',
-  approved: '#2F6FA8',
-  permit: '#1F8A7E',
-  construction: '#D0652B',
-  completed: '#4F7F3B',
+  planning: '#B5B5B3',
+  approved: '#8E8E8C',
+  permit: '#626260',
+  construction: '#2E2E2C',
+  completed: '#000000',
 }
 
 export const FEEDBACK_LABEL: Record<FeedbackKind, string> = {

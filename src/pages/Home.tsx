@@ -364,7 +364,7 @@ export default function Home() {
 
               <div className="footer-links">
                 <span>המידע מתעדכן על ידי עיריית אשדוד</span>
-                <Link to="/admin">כניסת צוות</Link>
+                <Link to="/admin">ניהול</Link>
               </div>
             </>
           )}
