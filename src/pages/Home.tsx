@@ -2,11 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import MapView, { type MapFocus } from '../components/MapView'
 import ProjectDetail, { coverOf } from '../components/ProjectDetail'
-import type { LonLat, ProjectKind, ProjectStatus, ProjectWithMedia, Quarter } from '../lib/types'
+import type { Feedback, LonLat, ProjectKind, ProjectStatus, ProjectWithMedia, Quarter } from '../lib/types'
 import { KIND_LABEL, STATUS_COLOR, STATUS_LABEL, STATUS_ORDER } from '../lib/labels'
-import { fetchPublishedProjects, fetchQuarters, geocodeAshdod, type GeocodeResult } from '../lib/data'
+import { fetchLatestAnswered, fetchPublishedProjects, fetchQuarters, geocodeAshdod, type GeocodeResult } from '../lib/data'
 import { distanceMeters, formatDistance } from '../lib/geo'
 import { mediaSrc } from '../lib/media'
+import '../styles/front.css'
 
 const KINDS = Object.keys(KIND_LABEL) as ProjectKind[]
 const NEAR_METERS = 1000
@@ -23,7 +24,8 @@ export default function Home() {
   const [statuses, setStatuses] = useState<Set<ProjectStatus>>(new Set())
   const [quarterId, setQuarterId] = useState('')
   const [nearOnly, setNearOnly] = useState(false)
-  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [mapOpen, setMapOpen] = useState(false)
+  const [answered, setAnswered] = useState<Feedback[]>([])
 
   const [me, setMe] = useState<LonLat | null>(null)
   const [meLabel, setMeLabel] = useState('')
@@ -45,6 +47,7 @@ export default function Home() {
         setProjects([])
       })
     fetchQuarters().then(setQuarters).catch(() => {})
+    fetchLatestAnswered(1).then(setAnswered).catch(() => {})
   }, [])
 
   const selected = useMemo(() => projects?.find((p) => p.id === selectedId) ?? null, [projects, selectedId])
@@ -163,249 +166,251 @@ export default function Home() {
     return quarters.filter((q) => ids.has(q.id))
   }, [projects, quarters])
 
+  const featured = filtered[0] ?? null
+  const rest = filtered.slice(1)
+  const featuredCover = featured ? coverImage(featured) : null
+  const today = new Intl.DateTimeFormat('he-IL', { month: 'long', year: 'numeric' }).format(new Date())
+
+  if (selected)
+    return (
+      <div className="fp fp-article">
+        <div className="fp-wrap fp-narrow" ref={scrollRef}>
+          <ProjectDetail project={selected} quarters={quarters} me={me} onBack={back} />
+        </div>
+      </div>
+    )
+
   return (
-    <div className={`shell${selected ? ' detail-open' : ''}`}>
-      <aside className="panel" aria-label="פרויקטים">
-        <div className="panel-scroll" ref={scrollRef}>
-          {selected ? (
-            <ProjectDetail project={selected} quarters={quarters} me={me} onBack={back} />
-          ) : (
-            <>
-              <header className="brand">
-                <div className="brand-top">
-                  <h1>
-                    מה נבנה <em>סביבי</em>
-                  </h1>
-                  <span className="city">אשדוד</span>
-                </div>
-                <p>
-                  פרויקטי הבינוי וההתחדשות העירונית בעיר, במפה אחת ובשפה פשוטה. הקלידו כתובת כדי לראות מה מתוכנן לידכם, ושאלו את צוות
-                  העירייה ישירות.
-                </p>
-              </header>
+    <div className="fp">
+      <div className="fp-wrap">
+        <header className="fp-top">
+          <span>אשדוד · מה נבנה סביבי</span>
+          <span>
+            {today}
+            {projects && projects.length > 0 ? ` · ${projects.length} פרויקטים` : ''}
+          </span>
+        </header>
 
-              <form className="search" onSubmit={search} role="search">
-                <label className="visually-hidden" htmlFor="addr">
-                  כתובת או שכונה
-                </label>
-                <div className="search-row">
-                  <input
-                    id="addr"
-                    className="input"
-                    placeholder="רחוב ומספר, או שם שכונה"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    autoComplete="street-address"
-                  />
-                  <button className="btn btn-primary" type="submit" disabled={searching}>
-                    {searching ? 'מחפש...' : 'חיפוש'}
-                  </button>
-                </div>
-                <button type="button" className="btn btn-sm" onClick={locate} style={{ justifySelf: 'start' }}>
-                  המיקום שלי
-                </button>
-                {searchMsg && <div className="notice notice-info">{searchMsg}</div>}
-                {results && (
-                  <ul className="search-results" aria-label="תוצאות חיפוש">
-                    {results.map((r, i) => (
-                      <li key={i}>
-                        <button type="button" onClick={() => placeMe(r.point, r.label)}>
-                          {r.label}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {me && (
-                  <div className="here">
-                    <span>
-                      מציגים לפי קרבה ל: <b>{meLabel}</b>
-                    </span>
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => {
-                        setMe(null)
-                        setNearOnly(false)
-                        setFocus({ type: 'all', nonce: ++nonce.current })
-                      }}
-                    >
-                      ניקוי
+        <section className="fp-head">
+          <h1>
+            מה נבנה
+            <br />
+            ברחוב <span className="serif">שלך?</span>
+          </h1>
+          <form className="fp-search" onSubmit={search} role="search">
+            <label className="fp-label" htmlFor="addr">
+              הכתובת שלך, שם שכונה או שם פרויקט
+            </label>
+            <div className="fp-pill">
+              <input
+                id="addr"
+                placeholder="רחוב ומספר"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                autoComplete="street-address"
+              />
+              <button type="submit" disabled={searching}>
+                {searching ? 'מחפש...' : 'לחפש'}
+              </button>
+            </div>
+            <button type="button" className="fp-link" onClick={locate}>
+              או לפי המיקום שלי
+            </button>
+            {searchMsg && <div className="fp-msg">{searchMsg}</div>}
+            {results && (
+              <ul className="search-results" aria-label="תוצאות חיפוש">
+                {results.map((r, i) => (
+                  <li key={i}>
+                    <button type="button" onClick={() => placeMe(r.point, r.label)}>
+                      {r.label}
                     </button>
-                  </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {me && (
+              <div className="fp-here">
+                <span>
+                  לפי קרבה ל: <b>{meLabel}</b>
+                </span>
+                {me && (
+                  <label className="fp-near">
+                    <input type="checkbox" checked={nearOnly} onChange={(e) => setNearOnly(e.target.checked)} />
+                    רק עד ק"מ
+                  </label>
                 )}
-              </form>
-
-              <div className="filters" data-open={filtersOpen}>
                 <button
                   type="button"
-                  className="btn btn-sm filters-toggle"
-                  aria-expanded={filtersOpen}
-                  onClick={() => setFiltersOpen((v) => !v)}
+                  className="fp-link light"
+                  onClick={() => {
+                    setMe(null)
+                    setNearOnly(false)
+                    setFocus({ type: 'all', nonce: ++nonce.current })
+                  }}
                 >
-                  {filtersOpen ? 'הסתרת הסינון' : `סינון${activeFilters ? ` (${activeFilters})` : ''}`}
+                  ניקוי
                 </button>
-                <div className="filters-body">
-                  {me && (
-                    <label className="switch">
-                      <input type="checkbox" checked={nearOnly} onChange={(e) => setNearOnly(e.target.checked)} />
-                      רק במרחק הליכה (עד ק"מ)
-                    </label>
-                  )}
-                  <div style={{ display: 'grid', gap: 6 }}>
-                    <span className="filters-label">שלב</span>
-                    <div className="chips">
-                      {STATUS_ORDER.map((s) => (
-                        <button
-                          key={s}
-                          type="button"
-                          className="chip"
-                          aria-pressed={statuses.has(s)}
-                          onClick={() => toggle(statuses, s, setStatuses)}
-                        >
-                          <span className="dot" style={{ background: STATUS_COLOR[s] }} />
-                          {STATUS_LABEL[s]}
-                          {statusCounts[s] ? <span className="muted">{statusCounts[s]}</span> : null}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gap: 6 }}>
-                    <span className="filters-label">סוג</span>
-                    <div className="chips">
-                      {KINDS.map((k) => (
-                        <button key={k} type="button" className="chip" aria-pressed={kinds.has(k)} onClick={() => toggle(kinds, k, setKinds)}>
-                          {KIND_LABEL[k]}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  {usedQuarters.length > 1 && (
-                    <label className="field">
-                      <span className="filters-label">רובע</span>
-                      <select className="select" value={quarterId} onChange={(e) => setQuarterId(e.target.value)}>
-                        <option value="">כל העיר</option>
-                        {usedQuarters.map((q) => (
-                          <option key={q.id} value={q.id}>
-                            {q.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  )}
+              </div>
+            )}
+          </form>
+        </section>
+
+        {selectedId && projects && !selected && <div className="fp-msg">הפרויקט שחיפשתם אינו זמין כרגע. אולי הוא עדיין בהכנה.</div>}
+
+        {projects === null ? (
+          <div className="loading">טוען את הפרויקטים...</div>
+        ) : loadError ? (
+          <div className="fp-empty">
+            <h3>לא הצלחנו לטעון את הפרויקטים</h3>
+            <button className="btn" onClick={() => window.location.reload()}>
+              טעינה מחדש
+            </button>
+          </div>
+        ) : (
+          <section className="fp-grid">
+            <article className="fp-cover">
+              {featured ? (
+                <>
+                  <button className="fp-render" onClick={() => open(featured.id)} aria-label={`לכתבה: ${featured.title}`}>
+                    {featuredCover ? <img src={featuredCover} alt="" /> : <span className="fp-render-empty">{KIND_LABEL[featured.kind]}</span>}
+                    <span className="fp-render-tag">{featured.plan_number ? `תוכנית ${featured.plan_number}` : 'הדמיה'}</span>
+                  </button>
+                  <span className="fp-status">{STATUS_LABEL[featured.status]}</span>
+                  <h2 onClick={() => open(featured.id)}>{featured.title}</h2>
+                  {featured.summary && <p className="fp-deck">{featured.summary}</p>}
+                  <button className="fp-more" onClick={() => open(featured.id)}>
+                    {featured.story ? 'לכתבה המלאה, למודל התלת-ממדי ולשאלות השכנים' : 'לכל הפרטים ולשאלות השכנים'}
+                  </button>
+                </>
+              ) : (
+                <div className="fp-empty">
+                  <h3>{projects.length ? 'אין פרויקטים שמתאימים לבחירה' : 'המפה בהקמה'}</h3>
                   {activeFilters > 0 && (
-                    <button type="button" className="btn btn-ghost btn-sm" style={{ justifySelf: 'start' }} onClick={clearFilters}>
+                    <button className="btn btn-sm" onClick={clearFilters}>
                       ניקוי הסינון
                     </button>
                   )}
                 </div>
-              </div>
-
-              {selectedId && projects && !selected && (
-                <div className="notice notice-warn" style={{ margin: '14px 22px 0' }}>
-                  הפרויקט שחיפשתם אינו זמין כרגע. אולי הוא עדיין בהכנה.
-                </div>
               )}
+            </article>
 
-              {projects === null ? (
-                <div className="loading">טוען את המפה...</div>
-              ) : loadError ? (
-                <div className="empty">
-                  <h3>לא הצלחנו לטעון את הפרויקטים</h3>
-                  <p>בדקו את החיבור לאינטרנט ונסו שוב.</p>
-                  <button className="btn" onClick={() => window.location.reload()}>
-                    טעינה מחדש
-                  </button>
-                </div>
-              ) : projects.length === 0 ? (
-                <div className="empty">
-                  <h3>המפה בהקמה</h3>
-                  <p>הפרויקטים הראשונים יעלו כאן בקרוב, עם הדמיות, סרטונים ומקום לשאלות.</p>
-                </div>
+            <nav className="fp-list" aria-label="עוד בסביבה">
+              <span className="fp-label rule">{me ? 'עוד קרוב אליך' : 'עוד בעיר'}</span>
+              {rest.length === 0 ? (
+                <p className="fp-soon">פרויקטים נוספים יעלו כאן בקרוב, עם הדמיות, סרטונים ומקום לשאלות.</p>
               ) : (
-                <>
-                  <div className="list-head">
-                    <h2>{me ? 'הכי קרוב אליך' : 'כל הפרויקטים'}</h2>
-                    <span className="muted" style={{ fontSize: 14 }}>
-                      {filtered.length} פרויקטים
-                    </span>
-                  </div>
-                  {filtered.length === 0 ? (
-                    <div className="empty">
-                      <h3>אין פרויקטים שמתאימים לבחירה</h3>
-                      <button className="btn btn-sm" onClick={clearFilters}>
-                        ניקוי הסינון
-                      </button>
-                    </div>
-                  ) : (
-                    <ul className="list">
-                      {filtered.map((p) => {
-                        const cover = coverOf(p)
-                        const q = quarters.find((x) => x.id === p.quarter_id)
-                        const d = me && p.center ? distanceMeters(me, p.center) : null
-                        return (
-                          <li key={p.id}>
-                            <button
-                              className={`card${hoverId === p.id ? ' is-hover' : ''}`}
-                              onClick={() => open(p.id)}
-                              onMouseEnter={() => setHoverId(p.id)}
-                              onMouseLeave={() => setHoverId(null)}
-                            >
-                              {cover ? (
-                                <img className="thumb" src={mediaSrc(cover) ?? ''} alt="" loading="lazy" />
-                              ) : (
-                                <div className="thumb thumb-empty">{KIND_LABEL[p.kind]}</div>
-                              )}
-                              <div>
-                                <div className="status-line" style={{ color: STATUS_COLOR[p.status] }}>
-                                  <span className="dot" style={{ background: STATUS_COLOR[p.status] }} />
-                                  {STATUS_LABEL[p.status]}
-                                </div>
-                                <h3>{p.title}</h3>
-                                <div className="meta">
-                                  {d != null && <span className="dist">{formatDistance(d)}</span>}
-                                  {q && <span>{q.name}</span>}
-                                  {p.units_planned != null && <span>{p.units_planned.toLocaleString('he-IL')} דירות בתוכנית</span>}
-                                </div>
-                              </div>
-                            </button>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  )}
-                </>
+                <ol>
+                  {rest.map((p, i) => {
+                    const d = me && p.center ? distanceMeters(me, p.center) : null
+                    return (
+                      <li key={p.id}>
+                        <button
+                          className={hoverId === p.id ? 'is-hover' : ''}
+                          onClick={() => open(p.id)}
+                          onMouseEnter={() => setHoverId(p.id)}
+                          onMouseLeave={() => setHoverId(null)}
+                        >
+                          <span className="n">{String(i + 2).padStart(2, '0')}</span>
+                          <span className="t">
+                            <small>
+                              {STATUS_LABEL[p.status]}
+                              {d != null ? ` · ${formatDistance(d)}` : ''}
+                            </small>
+                            {p.title}
+                          </span>
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ol>
               )}
+            </nav>
 
-              <div className="footer-links">
-                <span>המידע מתעדכן על ידי עיריית אשדוד</span>
-                <Link to="/admin">ניהול</Link>
+            <aside className={`fp-mapcol${mapOpen ? ' is-open' : ''}`}>
+              <div className="fp-label rule fp-maphead">
+                <span>המפה · מבט על</span>
+                <button type="button" className="fp-link" onClick={() => setMapOpen((v) => !v)}>
+                  {mapOpen ? 'סגירה' : 'למפה המלאה'}
+                </button>
               </div>
+              <div className="fp-map">
+                <MapView
+                  projects={filtered}
+                  hoverId={hoverId}
+                  onSelect={open}
+                  onHover={setHoverId}
+                  me={me}
+                  meRadius={NEAR_METERS}
+                  focus={focus}
+                />
+              </div>
+              <div className="fp-swatches" role="group" aria-label="סינון לפי שלב">
+                {STATUS_ORDER.map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    aria-pressed={statuses.has(st)}
+                    onClick={() => toggle(statuses, st, setStatuses)}
+                    title={statusCounts[st] ? `${statusCounts[st]} פרויקטים` : undefined}
+                  >
+                    <i style={{ background: STATUS_COLOR[st] }} />
+                    {STATUS_LABEL[st]}
+                  </button>
+                ))}
+              </div>
+              <div className="fp-kinds" role="group" aria-label="סינון לפי סוג">
+                {KINDS.map((k) => (
+                  <button key={k} type="button" aria-pressed={kinds.has(k)} onClick={() => toggle(kinds, k, setKinds)}>
+                    {KIND_LABEL[k]}
+                  </button>
+                ))}
+                {usedQuarters.length > 1 && (
+                  <select value={quarterId} onChange={(e) => setQuarterId(e.target.value)} aria-label="רובע">
+                    <option value="">כל העיר</option>
+                    {usedQuarters.map((q) => (
+                      <option key={q.id} value={q.id}>
+                        {q.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {activeFilters > 0 && (
+                  <button type="button" className="fp-link" onClick={clearFilters}>
+                    ניקוי
+                  </button>
+                )}
+              </div>
+            </aside>
+          </section>
+        )}
+
+        <section className="fp-band" aria-label="השכנים שואלים">
+          <span className="fp-label">השכנים שואלים</span>
+          {answered.length > 0 ? (
+            <>
+              <q>{answered[0].body}</q>
+              <span className="a">העירייה עונה: {answered[0].reply}</span>
+            </>
+          ) : (
+            <>
+              <q>מה זה אומר עליי, על הרחוב ועל הבית שלי?</q>
+              <span className="a">כל עמוד פרויקט פתוח לשאלות. צוות העירייה עונה, והתשובות מתפרסמות לכולם.</span>
             </>
           )}
-        </div>
-      </aside>
+        </section>
 
-      <div className="map-wrap">
-        <MapView
-          projects={selected ? (projects ?? []) : filtered}
-          selectedId={selected?.id}
-          hoverId={hoverId}
-          onSelect={open}
-          onHover={setHoverId}
-          me={me}
-          meRadius={NEAR_METERS}
-          focus={focus}
-        />
-        <div className="legend" aria-hidden>
-          {STATUS_ORDER.map((s) => (
-            <div key={s}>
-              <span className="dot" style={{ background: STATUS_COLOR[s] }} />
-              {STATUS_LABEL[s]}
-            </div>
-          ))}
-        </div>
+        <footer className="fp-foot">
+          <span>המידע מתעדכן על ידי עיריית אשדוד</span>
+          <Link to="/admin">ניהול</Link>
+        </footer>
       </div>
     </div>
   )
+}
+
+function coverImage(p: ProjectWithMedia): string | null {
+  const c = coverOf(p)
+  if (c) return mediaSrc(c)
+  const d = [...p.plan_media].filter((m) => m.kind === 'drawing').sort((a, b) => a.sort - b.sort)[0]
+  return d ? mediaSrc(d) : null
 }

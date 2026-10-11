@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import '../styles/magazine.css'
 import { supabase } from '../lib/supabase'
-import type { PlanModel, ProjectWithMedia, StoryChapter, StoryFact } from '../lib/types'
+import type { ChapterLayout, Media, PlanModel, ProjectWithMedia, StoryChapter, StoryFact } from '../lib/types'
 import Plan3D, { type ViewMode } from '../components/Plan3D'
 import UnitsCompare from '../components/UnitsCompare'
 import FeedbackSection from '../components/FeedbackSection'
-import { mediaSrc } from '../lib/media'
+import { embedUrl, mediaSrc } from '../lib/media'
 
 const MODES: { id: ViewMode; label: string; note: string }[] = [
   { id: 'today', label: 'היום', note: 'המבנים הקיימים סביב, וגבולות התוכנית בקו מקווקו. רוב המגרשים עוד לא בנויים.' },
@@ -39,10 +39,48 @@ function Fact({ f }: { f: StoryFact }) {
   )
 }
 
-function Chapter({ ch, n, reviewed }: { ch: StoryChapter; n: number; reviewed: boolean }) {
+const AUTO_LAYOUT: Record<string, ChapterLayout> = {
+  headline: 'quote',
+  why: 'columns',
+  before: 'image',
+  after: 'image',
+  weigh: 'dark',
+  gets: 'columns',
+}
+
+function layoutOf(ch: StoryChapter): ChapterLayout {
+  if (ch.layout) return ch.layout
+  if (AUTO_LAYOUT[ch.id]) return AUTO_LAYOUT[ch.id]
+  if (ch.pros || ch.questions) return 'dark'
+  return 'classic'
+}
+
+function Chapter({
+  ch,
+  n,
+  reviewed,
+  layout,
+  img,
+  flip,
+}: {
+  ch: StoryChapter
+  n: number
+  reviewed: boolean
+  layout: ChapterLayout
+  img?: Media | null
+  flip?: boolean
+}) {
+  const src = img ? mediaSrc(img) : null
+  const lay = layout === 'image' && !src ? 'classic' : layout
   return (
-    <section className="mag-chapter" id={ch.id} aria-labelledby={`h-${ch.id}`}>
-      <div>
+    <section className={`mag-chapter lay-${lay}${flip ? ' flip' : ''}`} id={ch.id} aria-labelledby={`h-${ch.id}`}>
+      {lay === 'image' && src && (
+        <figure className="mag-figure">
+          <img src={src} alt={img?.caption ?? ''} loading="lazy" />
+          {img?.caption && <figcaption>{img.caption}</figcaption>}
+        </figure>
+      )}
+      <div className="mag-chead">
         <div className="num" aria-hidden>
           {String(n).padStart(2, '0')}
         </div>
@@ -51,7 +89,7 @@ function Chapter({ ch, n, reviewed }: { ch: StoryChapter; n: number; reviewed: b
           {ch.draft && !reviewed && <span className="mag-tag">טיוטה לאישור</span>}
         </h2>
       </div>
-      <div>
+      <div className="mag-cbody">
         {ch.lead && <p className="lead">{ch.lead}</p>}
         {ch.paragraphs?.map((p, i) => <p key={i}>{p}</p>)}
         {ch.bullets && (
@@ -189,6 +227,15 @@ export default function PlanStory() {
       </div>
     )
 
+  const media = [...(project.plan_media ?? [])].sort((a, b) => a.sort - b.sort)
+  const renders = media.filter((m) => m.kind === 'render')
+  const videos = media.filter((m) => m.kind === 'video' || m.kind === 'video_link')
+  const drawings = media.filter((m) => m.kind === 'drawing')
+  // Chapters in the "image" composition take renders first, then drawing sheets.
+  const pictures = [...renders, ...drawings]
+  let imgIdx = 0
+  let flipNext = false
+  const cover = renders.find((m) => m.id === project.cover_media_id) ?? renders[0] ?? drawings[0] ?? null
   let n = 0
   return (
     <div className="mag" dir="rtl">
@@ -219,33 +266,56 @@ export default function PlanStory() {
         {project.published && isStaff && (
           <div className="mag-draft" role="status">
             <b>העמוד מפורסם לתושבים.</b>
-            <button className="btn btn-sm" onClick={() => setPublished(false)} disabled={busy}>
-              החזרה לטיוטה
-            </button>
+            <div className="mag-draft-actions">
+              <Link className="btn btn-sm" to={`/admin/p/${project.id}#media`}>
+                העלאת הדמיות וסרטונים
+              </Link>
+              <Link className="btn btn-sm" to={`/admin/p/${project.id}`}>
+                עריכת הפרויקט
+              </Link>
+              <button className="btn btn-sm" onClick={() => setPublished(false)} disabled={busy}>
+                החזרה לטיוטה
+              </button>
+            </div>
           </div>
         )}
 
-        <section className="mag-hero">
-          <span className="mag-label">{story.kicker}</span>
-          <h1>
-            {story.headline_serif && story.headline.includes(story.headline_serif) ? (
-              <>
-                {story.headline.split(story.headline_serif)[0]}
-                <span className="serif">{story.headline_serif}</span>
-                {story.headline.split(story.headline_serif)[1]}
-              </>
-            ) : (
-              story.headline
-            )}
-          </h1>
-          <p className="mag-deck">{story.deck}</p>
-          <div className="mag-meta">
-            <span className="mag-pill">{story.status.label}</span>
-            <span>{story.status.text}</span>
+        <section className="mag-cover">
+          {cover && <img className="mag-cover-img" src={mediaSrc(cover) ?? ''} alt="" />}
+          <div className="mag-cover-text">
+            <span className="mag-label">{story.kicker}</span>
+            <h1>
+              {story.headline_serif && story.headline.includes(story.headline_serif) ? (
+                <>
+                  {story.headline.split(story.headline_serif)[0]}
+                  <span className="serif">{story.headline_serif}</span>
+                  {story.headline.split(story.headline_serif)[1]}
+                </>
+              ) : (
+                story.headline
+              )}
+            </h1>
+            <p className="mag-deck">{story.deck}</p>
+            <div className="mag-meta">
+              <span className="mag-pill light">{story.status.label}</span>
+              <span>{story.status.text}</span>
+            </div>
           </div>
         </section>
 
-        <section className="mag-stage" aria-label="המודל התלת-ממדי">
+        <nav className="mag-index" aria-label="תוכן העניינים">
+          <a href="#model">המודל</a>
+          {(renders.length > 0 || videos.length > 0) && <a href="#renders">הדמיות</a>}
+          {story.chapters.map((ch) => (
+            <a key={ch.id} href={`#${ch.id}`}>
+              {ch.title}
+            </a>
+          ))}
+          <a href="#docs">מסמכים</a>
+          <a href="#voice">שאלות</a>
+        </nav>
+
+        <section className="mag-stage" id="model" aria-label="המודל התלת-ממדי">
           {model ? (
             <Plan3D model={model} mode={mode} selectedLot={lot} onSelectLot={setLot} />
           ) : (
@@ -337,14 +407,62 @@ export default function PlanStory() {
           </div>
         )}
 
+        {(renders.length > 0 || videos.length > 0 || isStaff) && (
+          <section className="mag-gallery" id="renders" aria-label="הדמיות וסרטונים">
+            <div className="mag-gallery-head">
+              <span className="mag-label">איך זה ייראה</span>
+              {isStaff && (
+                <Link className="mag-pill light" to={`/admin/p/${project.id}#media`}>
+                  העלאת הדמיות וסרטונים
+                </Link>
+              )}
+            </div>
+            {renders.length > 0 && (
+              <div className={`mag-renders n${Math.min(renders.length, 4)}`}>
+                {renders.map((m, i) => (
+                  <figure key={m.id} className={i === 0 ? 'lead' : ''}>
+                    <a href={mediaSrc(m) ?? '#'} target="_blank" rel="noreferrer">
+                      <img src={mediaSrc(m) ?? ''} alt={m.caption ?? ''} loading="lazy" />
+                    </a>
+                    {m.caption && <figcaption>{m.caption}</figcaption>}
+                  </figure>
+                ))}
+              </div>
+            )}
+            {videos.map((m) => {
+              const src = mediaSrc(m)
+              const embed = m.kind === 'video_link' && src ? embedUrl(src) : null
+              return (
+                <figure key={m.id} className="mag-video">
+                  {m.kind === 'video' && src ? (
+                    <video src={src} controls preload="metadata" playsInline />
+                  ) : embed ? (
+                    <iframe src={embed} title={m.caption || project.title} allow="encrypted-media; picture-in-picture; fullscreen" loading="lazy" />
+                  ) : src ? (
+                    <a href={src} target="_blank" rel="noreferrer">
+                      לצפייה בסרטון
+                    </a>
+                  ) : null}
+                  {m.caption && <figcaption>{m.caption}</figcaption>}
+                </figure>
+              )
+            })}
+            {renders.length === 0 && videos.length === 0 && (
+              <p className="mag-empty-media">עוד אין הדמיות או סרטונים לתוכנית. כשיעלו, הם יופיעו כאן לתושבים.</p>
+            )}
+          </section>
+        )}
+
         {story.chapters.map((ch) => {
           n++
-          return <Chapter key={ch.id} ch={ch} n={n} reviewed={story.reviewed} />
+          const layout = layoutOf(ch)
+          const img = layout === 'image' ? pictures[imgIdx++ % Math.max(pictures.length, 1)] ?? null : null
+          if (layout === 'image') flipNext = !flipNext
+          return <Chapter key={ch.id} ch={ch} n={n} reviewed={story.reviewed} layout={layout} img={img} flip={layout === 'image' && !flipNext} />
         })}
 
         {(() => {
-          const media = [...(project.plan_media ?? [])].sort((a, b) => a.sort - b.sort)
-          const sheets = media.filter((m) => m.kind === 'render')
+          const sheets = media.filter((m) => m.kind === 'drawing')
           const files = media.filter((m) => m.kind === 'document' || m.kind === 'kml')
           if (!sheets.length && !files.length) return null
           n++

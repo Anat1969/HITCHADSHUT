@@ -56,12 +56,12 @@ export default function MapView({
       style={{ height: '100%', width: '100%' }}
     >
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        subdomains="abcd"
+        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         maxZoom={19}
       />
       <ZoomControlLeft />
+      <ResizeWatcher />
       <FocusController focus={focus ?? null} />
       {onMapClick && <ClickCatcher onClick={onMapClick} />}
 
@@ -112,6 +112,16 @@ function ClickCatcher({ onClick }: { onClick: (p: LonLat) => void }) {
       onClick([Math.round(e.latlng.lng * 1e6) / 1e6, Math.round(e.latlng.lat * 1e6) / 1e6])
     },
   })
+  return null
+}
+
+function ResizeWatcher() {
+  const map = useMap()
+  useEffect(() => {
+    const ro = new ResizeObserver(() => map.invalidateSize())
+    ro.observe(map.getContainer())
+    return () => ro.disconnect()
+  }, [map])
   return null
 }
 

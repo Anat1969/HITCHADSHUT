@@ -41,7 +41,7 @@ export interface Project {
   updated_at: string
 }
 
-export type MediaKind = 'render' | 'video' | 'video_link' | 'kml' | 'document'
+export type MediaKind = 'render' | 'video' | 'video_link' | 'kml' | 'document' | 'drawing'
 
 export interface Media {
   id: string
@@ -98,7 +98,11 @@ export interface StoryChapter {
   terms?: { term: string; def: string }[]
   draft?: boolean
   sources?: string[]
+  /** Magazine composition for this chapter; chosen automatically when absent. */
+  layout?: ChapterLayout
 }
+
+export type ChapterLayout = 'classic' | 'quote' | 'columns' | 'image' | 'dark'
 
 export interface PlanStory {
   plan_number: string

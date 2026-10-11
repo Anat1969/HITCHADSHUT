@@ -18,22 +18,8 @@ interface Props {
 
 maplibregl.setWorkerUrl(workerUrl)
 
-const BASE_STYLE: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {
-    base: {
-      type: 'raster',
-      tiles: ['a', 'b', 'c', 'd'].map((s) => `https://${s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}@2x.png`),
-      tileSize: 256,
-      maxzoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    },
-  },
-  layers: [
-    { id: 'bg', type: 'background', paint: { 'background-color': '#E7E7E5' } },
-    { id: 'base', type: 'raster', source: 'base', paint: { 'raster-saturation': -1, 'raster-contrast': 0.08, 'raster-opacity': 0.9 } },
-  ],
-}
+// OpenFreeMap: free vector basemap, no key and no registration (openfreemap.org).
+const BASE_STYLE_URL = 'https://tiles.openfreemap.org/styles/positron'
 
 export default function Plan3D({ model, mode, selectedLot, onSelectLot }: Props) {
   const el = useRef<HTMLDivElement>(null)
@@ -50,7 +36,7 @@ export default function Plan3D({ model, mode, selectedLot, onSelectLot }: Props)
     const b = bboxOf(model.boundary)!
     const map = new maplibregl.Map({
       container: el.current,
-      style: BASE_STYLE,
+      style: BASE_STYLE_URL,
       bounds: [
         [b[0], b[1]],
         [b[2], b[3]],

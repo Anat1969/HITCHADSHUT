@@ -11,6 +11,7 @@ const KIND_NAME: Record<Media['kind'], string> = {
   video_link: 'קישור לסרטון',
   kml: 'KML',
   document: 'מסמך',
+  drawing: 'תשריט',
 }
 
 interface Props {

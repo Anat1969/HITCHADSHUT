@@ -53,6 +53,19 @@ export async function fetchApprovedFeedback(projectId: string): Promise<Feedback
   return (data ?? []) as Feedback[]
 }
 
+/** Latest answered resident questions across all published projects, for the front page. */
+export async function fetchLatestAnswered(limit = 3): Promise<Feedback[]> {
+  const { data, error } = await supabase
+    .from('plan_feedback')
+    .select('*')
+    .eq('status', 'approved')
+    .not('reply', 'is', null)
+    .order('replied_at', { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return (data ?? []) as Feedback[]
+}
+
 export async function submitFeedback(input: {
   project_id: string
   kind: FeedbackKind

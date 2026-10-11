@@ -233,6 +233,11 @@ export default function ProjectEditor() {
         <Link to="/admin">חזרה לרשימה</Link>
       </div>
     )
+  useEffect(() => {
+    if (loaded && window.location.hash === '#media')
+      setTimeout(() => document.getElementById('media')?.scrollIntoView({ behavior: 'smooth' }), 60)
+  }, [loaded])
+
   if (!loaded) return <div className="loading">טוען...</div>
 
   return (
@@ -250,6 +255,11 @@ export default function ProjectEditor() {
           )}
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {!isNew && form.story && form.plan_number && (
+            <a className="btn" href={`/plan/${form.plan_number}`} target="_blank" rel="noreferrer">
+              לעמוד התוכנית
+            </a>
+          )}
           <button className="btn" onClick={() => save()} disabled={saving}>
             {saving ? 'שומר...' : dirty || isNew ? 'שמירה' : 'נשמר'}
           </button>
@@ -267,6 +277,16 @@ export default function ProjectEditor() {
 
       <div className="editor-layout">
         <div style={{ display: 'grid', gap: 18 }}>
+          <div id="media" style={{ scrollMarginTop: 16 }}>
+            {isNew ? (
+              <div className="box">
+                <h3>הדמיות וסרטונים</h3>
+                <p className="muted">שמרו את הפרויקט פעם אחת, ואז אפשר להעלות הדמיות, סרטונים ומסמכים.</p>
+              </div>
+            ) : (
+              <MediaManager projectId={id!} media={media} coverId={form.cover_media_id} onChange={reloadMedia} onCover={setCover} />
+            )}
+          </div>
           <div className="box">
             <h3>מה התושבים יראו</h3>
             <label className="field">
@@ -382,15 +402,6 @@ export default function ProjectEditor() {
               </label>
             </div>
           </div>
-
-          {isNew ? (
-            <div className="box">
-              <h3>הדמיות וסרטונים</h3>
-              <p className="muted">שמרו את הפרויקט פעם אחת, ואז אפשר להעלות הדמיות, סרטונים ומסמכים.</p>
-            </div>
-          ) : (
-            <MediaManager projectId={id!} media={media} coverId={form.cover_media_id} onChange={reloadMedia} onCover={setCover} />
-          )}
 
           {!isNew && (
             <div className="box">

@@ -152,6 +152,9 @@ export default function ProjectsList() {
                         <Link className="btn btn-sm" to={`/admin/p/${p.id}`}>
                           עריכה
                         </Link>
+                        <Link className="btn btn-sm" to={`/admin/p/${p.id}#media`}>
+                          הדמיות וסרטונים
+                        </Link>
                         {p.published && (
                           <Link className="btn btn-sm btn-ghost" to={`/p/${p.id}`} target="_blank">
                             צפייה
