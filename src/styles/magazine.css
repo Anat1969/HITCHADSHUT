@@ -114,6 +114,16 @@
 
 .mag-foot { padding: 34px 0 60px; border-top: 1px solid var(--m-ink); display: grid; gap: 10px; font-size: 14px; color: var(--m-ink-2); }
 
+.mag-sheets { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 6px 0 22px; }
+.mag-sheets a { display: grid; gap: 8px; text-decoration: none; }
+.mag-sheets img { width: 100%; aspect-ratio: 1.41; object-fit: cover; border-radius: 6px; background: #FFFFFF; filter: grayscale(1); transition: filter .2s; box-shadow: 0 24px 40px -26px rgba(0,0,0,0.55); }
+.mag-sheets a:hover img { filter: none; }
+.mag-sheets span { font-size: 14px; color: var(--m-ink-2); }
+.mag-files { border-top: 1px solid var(--m-ink); }
+.mag-files li { display: flex; justify-content: space-between; gap: 12px; }
+.mag-files a { text-decoration: none; font-size: 18px; font-weight: 300; }
+.mag-files span { font-size: 12px; letter-spacing: 0.12em; color: var(--m-ink-3); }
+
 @media (max-width: 860px) {
   .mag-chapter { grid-template-columns: 1fr; gap: 10px; }
   .mag-two { grid-template-columns: 1fr; }

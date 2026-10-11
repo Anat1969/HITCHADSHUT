@@ -6,6 +6,7 @@ import type { PlanModel, ProjectWithMedia, StoryChapter, StoryFact } from '../li
 import Plan3D, { type ViewMode } from '../components/Plan3D'
 import UnitsCompare from '../components/UnitsCompare'
 import FeedbackSection from '../components/FeedbackSection'
+import { mediaSrc } from '../lib/media'
 
 const MODES: { id: ViewMode; label: string; note: string }[] = [
   { id: 'today', label: 'היום', note: 'המבנים הקיימים סביב, וגבולות התוכנית בקו מקווקו. רוב המגרשים עוד לא בנויים.' },
@@ -340,6 +341,49 @@ export default function PlanStory() {
           n++
           return <Chapter key={ch.id} ch={ch} n={n} reviewed={story.reviewed} />
         })}
+
+        {(() => {
+          const media = [...(project.plan_media ?? [])].sort((a, b) => a.sort - b.sort)
+          const sheets = media.filter((m) => m.kind === 'render')
+          const files = media.filter((m) => m.kind === 'document' || m.kind === 'kml')
+          if (!sheets.length && !files.length) return null
+          n++
+          return (
+            <section className="mag-chapter" id="docs">
+              <div>
+                <div className="num" aria-hidden>
+                  {String(n).padStart(2, '0')}
+                </div>
+                <h2>המסמכים המקוריים</h2>
+              </div>
+              <div>
+                <p className="lead">כל מה שכתוב כאן נשען על המסמכים הרשמיים. אפשר לפתוח ולבדוק.</p>
+                {sheets.length > 0 && (
+                  <div className="mag-sheets">
+                    {sheets.map((m) => (
+                      <a key={m.id} href={mediaSrc(m) ?? '#'} target="_blank" rel="noreferrer">
+                        <img src={mediaSrc(m) ?? ''} alt={m.caption ?? ''} loading="lazy" />
+                        <span>{m.caption}</span>
+                      </a>
+                    ))}
+                  </div>
+                )}
+                {files.length > 0 && (
+                  <ul className="mag-files">
+                    {files.map((m) => (
+                      <li key={m.id}>
+                        <a href={mediaSrc(m) ?? '#'} target="_blank" rel="noreferrer" download={m.kind === 'kml' ? true : undefined}>
+                          {m.caption}
+                        </a>
+                        <span>{m.kind === 'kml' ? 'KML, נפתח ב-Google Earth' : 'PDF'}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </section>
+          )
+        })()}
 
         <section className="mag-chapter" id="voice">
           <div>

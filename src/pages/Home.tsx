@@ -91,7 +91,14 @@ export default function Home() {
     setNearOnly(false)
   }
 
-  const open = useCallback((id: string) => navigate(`/p/${id}`), [navigate])
+  const open = useCallback(
+    (id: string) => {
+      const p = projects?.find((x) => x.id === id)
+      if (p?.story && p.plan_number) navigate(`/plan/${p.plan_number}`)
+      else navigate(`/p/${id}`)
+    },
+    [navigate, projects],
+  )
   const back = useCallback(() => navigate('/'), [navigate])
 
   const placeMe = (point: LonLat, label: string) => {
