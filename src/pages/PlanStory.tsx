@@ -1,0 +1,366 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import '../styles/magazine.css'
+import { supabase } from '../lib/supabase'
+import type { PlanModel, ProjectWithMedia, StoryChapter, StoryFact } from '../lib/types'
+import Plan3D, { type ViewMode } from '../components/Plan3D'
+import UnitsCompare from '../components/UnitsCompare'
+import FeedbackSection from '../components/FeedbackSection'
+
+const MODES: { id: ViewMode; label: string; note: string }[] = [
+  { id: 'today', label: 'היום', note: 'המבנים הקיימים סביב, וגבולות התוכנית בקו מקווקו. רוב המגרשים עוד לא בנויים.' },
+  {
+    id: 'allowed',
+    label: 'המותר',
+    note: 'המעטפת השקופה היא השטח והגובה שמותר לבנות בכל מגרש: קווי הבניין מהתשריט והגובה המרבי מטבלה 5.',
+  },
+  {
+    id: 'after',
+    label: 'אחרי',
+    note: 'נפח בנייה לדוגמה, שמחושב משטחי הבנייה בטבלה 5. הוא זהה לנפח בתוכנית הקודמת. מה שמשתנה הוא מספר הדירות בתוכו.',
+  },
+]
+
+const nf = new Intl.NumberFormat('he-IL')
+
+function Cert({ c }: { c: StoryFact['certainty'] }) {
+  return <span className={`mag-cert ${c}`}>{c === 'plan' ? 'לפי התוכנית' : 'הערכה'}</span>
+}
+
+function Fact({ f }: { f: StoryFact }) {
+  return (
+    <div className="mag-fact">
+      <span className="v">{f.value}</span>
+      {f.unit && <span className="u">{f.unit}</span>}
+      <span className="l">{f.label}</span>
+      <Cert c={f.certainty} />
+    </div>
+  )
+}
+
+function Chapter({ ch, n, reviewed }: { ch: StoryChapter; n: number; reviewed: boolean }) {
+  return (
+    <section className="mag-chapter" id={ch.id} aria-labelledby={`h-${ch.id}`}>
+      <div>
+        <div className="num" aria-hidden>
+          {String(n).padStart(2, '0')}
+        </div>
+        <h2 id={`h-${ch.id}`}>
+          {ch.title}
+          {ch.draft && !reviewed && <span className="mag-tag">טיוטה לאישור</span>}
+        </h2>
+      </div>
+      <div>
+        {ch.lead && <p className="lead">{ch.lead}</p>}
+        {ch.paragraphs?.map((p, i) => <p key={i}>{p}</p>)}
+        {ch.bullets && (
+          <ul>
+            {ch.bullets.map((b, i) => (
+              <li key={i}>{b}</li>
+            ))}
+          </ul>
+        )}
+        {ch.facts && ch.id !== 'numbers' && (
+          <div className="facts">
+            {ch.facts.map((f, i) => (
+              <Fact key={i} f={f} />
+            ))}
+          </div>
+        )}
+        {(ch.pros || ch.questions) && (
+          <div className="mag-two">
+            {ch.pros && (
+              <div>
+                <h3>מה מרוויחים</h3>
+                <ul>
+                  {ch.pros.map((b, i) => (
+                    <li key={i}>{b}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {ch.questions && (
+              <div>
+                <h3>שווה לשאול</h3>
+                <ul>
+                  {ch.questions.map((b, i) => (
+                    <li key={i}>{b}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+        {ch.steps && (
+          <ol className="mag-steps">
+            {ch.steps.map((s, i) => (
+              <li key={i}>
+                <div>
+                  <b>{s.title}</b>
+                  <span>{s.text}</span>
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
+        {ch.terms && (
+          <dl className="mag-terms">
+            {ch.terms.map((t) => (
+              <div key={t.term}>
+                <dt>{t.term}</dt>
+                <dd>{t.def}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+        {ch.sources && ch.sources.length > 0 && <div className="mag-src">מקור: {ch.sources.join(' · ')}</div>}
+      </div>
+    </section>
+  )
+}
+
+export default function PlanStory() {
+  const { planNumber } = useParams()
+  const [project, setProject] = useState<ProjectWithMedia | null | undefined>(undefined)
+  const [model, setModel] = useState<PlanModel | null>(null)
+  const [modelError, setModelError] = useState(false)
+  const [isStaff, setIsStaff] = useState(false)
+  const [mode, setMode] = useState<ViewMode>('after')
+  const [lot, setLot] = useState<number | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    supabase
+      .from('plan_projects')
+      .select('*, plan_media(*)')
+      .eq('plan_number', planNumber ?? '')
+      .maybeSingle()
+      .then(({ data }) => setProject((data as ProjectWithMedia) ?? null))
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) supabase.rpc('is_staff').then(({ data: s }) => setIsStaff(s === true))
+    })
+  }, [planNumber])
+
+  useEffect(() => {
+    if (!project?.model_url) return
+    fetch(project.model_url)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then(setModel)
+      .catch(() => setModelError(true))
+  }, [project?.model_url])
+
+  useEffect(() => {
+    if (project?.story) document.title = `${project.story.headline} | ${project.story.kicker}`
+  }, [project?.story])
+
+  const story = project?.story
+  const numbers = story?.chapters.find((c) => c.id === 'numbers')
+  const selected = useMemo(() => model?.lots.find((l) => l.lot === lot) ?? null, [model, lot])
+  const modeInfo = MODES.find((m) => m.id === mode)!
+  const lotChecks = model?.checks ?? []
+
+  async function setPublished(v: boolean) {
+    if (!project || !story) return
+    setBusy(true)
+    const { error } = await supabase
+      .from('plan_projects')
+      .update({ published: v, story: { ...story, reviewed: v ? true : story.reviewed } })
+      .eq('id', project.id)
+    setBusy(false)
+    if (!error) setProject({ ...project, published: v, story: { ...story, reviewed: v ? true : story.reviewed } })
+  }
+
+  if (project === undefined) return <div className="mag"><div className="loading">טוען את התוכנית...</div></div>
+  if (!project || !story)
+    return (
+      <div className="mag">
+        <div className="mag-wrap">
+          <div className="mag-top">
+            <Link to="/">מה נבנה סביבי · אשדוד</Link>
+          </div>
+          <div className="mag-hero">
+            <h1>התוכנית עוד לא פורסמה</h1>
+            <p className="mag-deck">העמוד של תוכנית {planNumber} נמצא בהכנה אצל צוות העירייה.</p>
+          </div>
+        </div>
+      </div>
+    )
+
+  let n = 0
+  return (
+    <div className="mag" dir="rtl">
+      <div className="mag-wrap">
+        <header className="mag-top">
+          <Link to="/">מה נבנה סביבי · אשדוד</Link>
+          <span>תוכנית {story.plan_number}</span>
+        </header>
+
+        {!project.published && isStaff && (
+          <div className="mag-draft" role="status">
+            <b>טיוטה לבדיקה. רק צוות העירייה רואה את העמוד.</b>
+            <span>הטקסטים נכתבו מתוך הוראות התוכנית. כדאי לעבור על כל פרק מול המקור לפני פרסום.</span>
+            {lotChecks.length > 0 && (
+              <ul>
+                {lotChecks.map((c, i) => (
+                  <li key={i}>
+                    מגרש {c.lot}: {c.text}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <button className="btn btn-sm" onClick={() => setPublished(true)} disabled={busy}>
+              {busy ? 'רגע...' : 'פרסום לתושבים'}
+            </button>
+          </div>
+        )}
+        {project.published && isStaff && (
+          <div className="mag-draft" role="status">
+            <b>העמוד מפורסם לתושבים.</b>
+            <button className="btn btn-sm" onClick={() => setPublished(false)} disabled={busy}>
+              החזרה לטיוטה
+            </button>
+          </div>
+        )}
+
+        <section className="mag-hero">
+          <span className="mag-label">{story.kicker}</span>
+          <h1>
+            {story.headline_serif && story.headline.includes(story.headline_serif) ? (
+              <>
+                {story.headline.split(story.headline_serif)[0]}
+                <span className="serif">{story.headline_serif}</span>
+                {story.headline.split(story.headline_serif)[1]}
+              </>
+            ) : (
+              story.headline
+            )}
+          </h1>
+          <p className="mag-deck">{story.deck}</p>
+          <div className="mag-meta">
+            <span className="mag-pill">{story.status.label}</span>
+            <span>{story.status.text}</span>
+          </div>
+        </section>
+
+        <section className="mag-stage" aria-label="המודל התלת-ממדי">
+          {model ? (
+            <Plan3D model={model} mode={mode} selectedLot={lot} onSelectLot={setLot} />
+          ) : (
+            <div className="mag-map" style={{ display: 'grid', placeItems: 'center' }}>
+              {modelError ? 'המודל אינו זמין כרגע' : 'בונה את המודל...'}
+            </div>
+          )}
+          <div className="mag-modes" role="group" aria-label="מצב תצוגה">
+            {MODES.map((m) => (
+              <button key={m.id} aria-pressed={mode === m.id} onClick={() => setMode(m.id)}>
+                {m.label}
+              </button>
+            ))}
+          </div>
+          <div className="mag-mode-note">
+            {modeInfo.note}
+            <div className="mag-legend">
+              <span>
+                <i style={{ background: '#D2D2D0' }} />
+                קיים
+              </span>
+              <span>
+                <i style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid #8A8A88' }} />
+                מותר
+              </span>
+              <span>
+                <i style={{ background: 'linear-gradient(180deg,#C4C4C2,#8E8E8C)' }} />
+                נפח לדוגמה
+              </span>
+            </div>
+          </div>
+          {model && (
+            <aside className="mag-lot" aria-live="polite">
+              {selected ? (
+                <>
+                  <button className="close" onClick={() => setLot(null)}>
+                    סגירה
+                  </button>
+                  <span className="mag-label">מגרש</span>
+                  <h3>{selected.lot}</h3>
+                  <dl>
+                    <div>
+                      <dt>קומות</dt>
+                      <dd>{selected.floors_above}</dd>
+                    </div>
+                    <div>
+                      <dt>גובה מרבי</dt>
+                      <dd>{selected.height_m} מ׳</dd>
+                    </div>
+                    <div>
+                      <dt>שטח המגרש</dt>
+                      <dd>{nf.format(selected.lot_size)} מ"ר</dd>
+                    </div>
+                    <div>
+                      <dt>תכסית מרבית</dt>
+                      <dd>{selected.coverage_pct}%</dd>
+                    </div>
+                    <div>
+                      <dt>מרתפים</dt>
+                      <dd>{selected.floors_below}+ קומות</dd>
+                    </div>
+                    <div>
+                      <dt>דירות קטנות</dt>
+                      <dd>{selected.small_75_min} לפחות</dd>
+                    </div>
+                  </dl>
+                  <UnitsCompare lot={selected} />
+                  <span style={{ fontSize: 12, color: '#555555', lineHeight: 1.5 }}>
+                    אותו בניין, יותר דירות. משמאל: דירות עד 75 מ"ר באפור כהה, עד 55 מ"ר בשחור. מספר הדירות היום וגודל הדירה הממוצע הם
+                    הערכה לפי הערה 3 לטבלה 5.
+                    {selected.mixed && ' במגרש יש גם חזית מסחרית לרחוב.'}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="mag-label">33 מגרשים · {nf.format(model.summary.units_after)} דירות</span>
+                  <p className="hint">לחצו על מגדל כדי לראות מה התוכנית משנה במגרש: אותו בניין, ועוד כמה דירות.</p>
+                </>
+              )}
+            </aside>
+          )}
+        </section>
+
+        {numbers?.facts && (
+          <div className="mag-band" aria-label="במספרים">
+            {numbers.facts.map((f, i) => (
+              <Fact key={i} f={f} />
+            ))}
+          </div>
+        )}
+
+        {story.chapters.map((ch) => {
+          n++
+          return <Chapter key={ch.id} ch={ch} n={n} reviewed={story.reviewed} />
+        })}
+
+        <section className="mag-chapter" id="voice">
+          <div>
+            <div className="num" aria-hidden>
+              {String(n + 1).padStart(2, '0')}
+            </div>
+            <h2>השאלות שלכם</h2>
+          </div>
+          <div className="mag-voice">
+            <FeedbackSection projectId={project.id} canPost={project.published} />
+          </div>
+        </section>
+
+        <footer className="mag-foot">
+          <span>{story.disclaimer}</span>
+          <a href={story.mavat_url} target="_blank" rel="noreferrer">
+            מסמכי התוכנית המלאים באתר תכנון זמין
+          </a>
+          <span className="mag-label">
+            {story.official_name} · {story.plan_number}
+          </span>
+        </footer>
+      </div>
+    </div>
+  )
+}

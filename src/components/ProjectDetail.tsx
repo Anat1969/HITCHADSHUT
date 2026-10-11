@@ -85,6 +85,11 @@ export default function ProjectDetail({ project: p, quarters, me, onBack, previe
           </p>
         )}
         {p.summary && <p className="lead">{p.summary}</p>}
+        {p.story && p.plan_number && (
+          <a className="btn btn-primary" style={{ justifySelf: 'start' }} href={`/plan/${p.plan_number}`}>
+            לסיפור המלא של התוכנית, עם מודל תלת-ממדי
+          </a>
+        )}
       </div>
 
       <div className="section">

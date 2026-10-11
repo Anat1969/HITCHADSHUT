@@ -34,6 +34,8 @@ const EMPTY: Form = {
   geojson: null,
   center: null,
   cover_media_id: null,
+  story: null,
+  model_url: null,
   published: false,
 }
 
