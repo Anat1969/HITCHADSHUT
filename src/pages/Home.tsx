@@ -114,11 +114,19 @@ export default function Home() {
     e.preventDefault()
     const q = query.trim()
     if (q.length < 2) return
+    const hit = (projects ?? []).find((p) =>
+      [p.title, p.address, p.plan_number].some((v) => v && (v.includes(q) || q.includes(v))),
+    )
+    if (hit) {
+      setSearchMsg('')
+      open(hit.id)
+      return
+    }
     setSearching(true)
     setSearchMsg('')
     try {
       const r = await geocodeAshdod(q)
-      if (!r.length) setSearchMsg('לא מצאנו את הכתובת באשדוד. נסו רחוב ומספר, או שם שכונה.')
+      if (!r.length) setSearchMsg('לא מצאנו כתובת או פרויקט בשם הזה. נסו רחוב ומספר, שם שכונה או מספר תוכנית.')
       else if (r.length === 1) placeMe(r[0].point, r[0].label)
       else setResults(r)
     } catch {
