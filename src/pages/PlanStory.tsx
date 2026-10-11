@@ -133,7 +133,7 @@ export default function PlanStory() {
   useEffect(() => {
     supabase
       .from('plan_projects')
-      .select('*, plan_media(*)')
+      .select('*, plan_media!plan_media_project_id_fkey(*)')
       .eq('plan_number', planNumber ?? '')
       .maybeSingle()
       .then(({ data }) => setProject((data as ProjectWithMedia) ?? null))

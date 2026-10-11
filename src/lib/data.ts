@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 import type { Feedback, FeedbackKind, LonLat, ProjectWithMedia, Quarter } from './types'
 
-const PROJECT_SELECT = '*, plan_media(*)'
+const PROJECT_SELECT = '*, plan_media!plan_media_project_id_fkey(*)'
 
 export async function fetchPublishedProjects(): Promise<ProjectWithMedia[]> {
   const { data, error } = await supabase
