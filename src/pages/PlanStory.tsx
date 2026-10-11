@@ -136,9 +136,11 @@ export default function PlanStory() {
       .eq('plan_number', planNumber ?? '')
       .maybeSingle()
       .then(({ data }) => setProject((data as ProjectWithMedia) ?? null))
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) supabase.rpc('is_staff').then(({ data: s }) => setIsStaff(s === true))
-    })
+    try {
+      setIsStaff(localStorage.getItem('mnv-admin') === '1')
+    } catch {
+      /* storage unavailable */
+    }
   }, [planNumber])
 
   useEffect(() => {

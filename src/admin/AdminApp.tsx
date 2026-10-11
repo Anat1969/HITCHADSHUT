@@ -1,33 +1,25 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
-import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
-import Login from './Login'
 import ProjectsList from './ProjectsList'
 import ProjectEditor from './ProjectEditor'
 import BulkImport from './BulkImport'
 import Moderation from './Moderation'
 import { ToastProvider } from './toast'
 
+export const ADMIN_FLAG = 'mnv-admin'
+
 export default function AdminApp() {
-  const [session, setSession] = useState<Session | null | undefined>(undefined)
-  const [isStaff, setIsStaff] = useState<boolean | null>(null)
   const [pending, setPending] = useState(0)
   const location = useLocation()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session))
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
-    return () => data.subscription.unsubscribe()
-  }, [])
-
-  useEffect(() => {
-    if (!session) {
-      setIsStaff(null)
-      return
+    try {
+      localStorage.setItem(ADMIN_FLAG, '1')
+    } catch {
+      /* storage unavailable */
     }
-    supabase.rpc('is_staff').then(({ data, error }) => setIsStaff(!error && data === true))
-  }, [session])
+  }, [])
 
   const refreshPending = useCallback(() => {
     supabase
@@ -38,26 +30,8 @@ export default function AdminApp() {
   }, [])
 
   useEffect(() => {
-    if (isStaff) refreshPending()
-  }, [isStaff, refreshPending, location.pathname])
-
-  if (session === undefined) return <div className="loading">טוען...</div>
-  if (!session) return <Login />
-  if (isStaff === null) return <div className="loading">בודק הרשאות...</div>
-  if (!isStaff)
-    return (
-      <div className="login">
-        <div className="box">
-          <h3>החשבון אינו מורשה לניהול</h3>
-          <p className="muted">
-            נכנסת כ-<b dir="ltr">{session.user.email}</b>. כדי לקבל הרשאה, מנהל המערכת צריך להוסיף את החשבון לרשימת הצוות.
-          </p>
-          <button className="btn" onClick={() => supabase.auth.signOut()}>
-            יציאה
-          </button>
-        </div>
-      </div>
-    )
+    refreshPending()
+  }, [refreshPending, location.pathname])
 
   return (
     <ToastProvider>
@@ -79,9 +53,6 @@ export default function AdminApp() {
               <Link className="btn btn-sm" to="/" target="_blank">
                 לאתר התושבים
               </Link>
-              <button className="btn btn-sm" onClick={() => supabase.auth.signOut()}>
-                יציאה
-              </button>
             </div>
           </div>
         </header>
