@@ -143,7 +143,7 @@ export default function MediaManager({ projectId, media, coverId, onChange, onCo
           type="file"
           multiple
           hidden
-          accept="image/*,video/*,.pdf,.mp4,.mov,.webm"
+          accept="image/*,video/*,.pdf,.mp4,.mov,.webm,.kml,.kmz,.xls,.xlsx"
           onChange={(e) => {
             if (e.target.files?.length) upload(e.target.files)
             e.target.value = ''

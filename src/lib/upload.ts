@@ -1,8 +1,10 @@
 import { MEDIA_BUCKET, supabase } from './supabase'
-import { extOf, kindForFile, MAX_UPLOAD_BYTES } from './media'
+import { captionFromFileName, extOf, kindForFile, MAX_UPLOAD_BYTES } from './media'
 import type { Media, MediaKind } from './types'
 
 const CONTENT_TYPES: Record<string, string> = {
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   kml: 'application/vnd.google-earth.kml+xml',
   kmz: 'application/vnd.google-earth.kmz',
 }
@@ -55,7 +57,7 @@ export async function uploadMediaFile(
   })
   if (upErr) throw new UploadError(`ההעלאה של "${original.name}" נכשלה`)
 
-  const caption = opts.caption ?? null
+  const caption = opts.caption ?? (kind === 'render' || kind === 'video' ? null : captionFromFileName(original.name))
   const { data, error } = await supabase
     .from('plan_media')
     .insert({ project_id: projectId, kind, storage_path: path, caption, sort: opts.sort })

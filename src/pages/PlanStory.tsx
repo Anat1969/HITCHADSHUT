@@ -159,6 +159,12 @@ function Chapter({
   )
 }
 
+function fileLabel(src: string | null): string {
+  const ext = src?.match(/\.([a-z0-9]{2,5})(\?|$)/i)?.[1]?.toLowerCase()
+  if (ext === 'xls' || ext === 'xlsx') return 'Excel'
+  return ext === 'pdf' || !ext ? 'PDF' : ext.toUpperCase()
+}
+
 export default function PlanStory() {
   const { planNumber } = useParams()
   const [project, setProject] = useState<ProjectWithMedia | null | undefined>(undefined)
@@ -538,7 +544,7 @@ export default function PlanStory() {
                         <a href={mediaSrc(m) ?? '#'} target="_blank" rel="noreferrer" download={m.kind === 'kml' ? true : undefined}>
                           {m.caption}
                         </a>
-                        <span>{m.kind === 'kml' ? 'KML, נפתח ב-Google Earth' : 'PDF'}</span>
+                        <span>{m.kind === 'kml' ? 'KML, נפתח ב-Google Earth' : fileLabel(mediaSrc(m))}</span>
                       </li>
                     ))}
                   </ul>
