@@ -37,7 +37,8 @@
 - **מתחמי התחדשות עירונית**: `supabase/seed/ur-compounds-ashdod.sql` מייבא ומעדכן את כל המתחמים באשדוד מ-data.gov.il (רשימה, מספרים וסטטוס) ואת הגבולות מהשכבה הממשלתית, דרך פונקציית הקצה `supabase/functions/ur-compounds-ashdod`. רץ בתוך מסד הנתונים, בטוח להרצה חוזרת.
 - **עמוד תוכנית** (`/plan/<מספר תוכנית>`, לוכסן הופך למקף): טקסט ב-`plan_projects.story`, ומודל תלת-ממדי מקובץ סטטי (`model_url`) או מטבלת `plan_models`.
   - 603-0811588: `public/plans/603-0811588/` ו-`scripts/build_plan_model.py`.
-  - תמל/2022: `supabase/seed/tamal-2022.*` (סיפור, פרטי פרויקט, ובניית המודל מתוך שכבות ה-SHP ו-OpenStreetMap).
+  - תמל/2022: `supabase/seed/tamal-2022.*` (סיפור, פרטי פרויקט, ובניית המודל מתוך שכבות ה-SHP ו-OpenStreetMap), ונספחים ב-`public/plans/tamal-2022/docs/`.
+- רשימת הקבצים לכל מתחם חדש, ומה אפשר להוריד אוטומטית: `CLAUDE.md`.
 
 ## הרצה מקומית
 
