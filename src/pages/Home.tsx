@@ -321,6 +321,7 @@ export default function Home() {
                           <span className="t">
                             <small>
                               {p.kind === 'urban_renewal' ? 'התחדשות עירונית' : KIND_LABEL[p.kind]} · {STATUS_LABEL[p.status]}
+                              {p.story ? (p.story.level === 'basic' ? ' · עמוד בסיסי' : ' · עמוד מלא ומודל') : ''}
                               {d != null ? ` · ${formatDistance(d)}` : ''}
                             </small>
                             {p.title}

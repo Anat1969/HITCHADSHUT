@@ -116,6 +116,8 @@ export interface PlanStory {
   chapters: StoryChapter[]
   disclaimer: string
   reviewed: boolean
+  /** "basic": built from the national open data only, until the plan documents are uploaded. */
+  level?: 'full' | 'basic'
 }
 
 export interface LotData {
