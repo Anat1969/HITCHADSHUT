@@ -213,6 +213,10 @@ export default function PlanStory() {
   }, [project?.model_url, project?.plan_number, project?.story])
 
   useEffect(() => {
+    if (model && !model.massing?.features?.length) setMode('today')
+  }, [model])
+
+  useEffect(() => {
     if (project?.story) document.title = `${project.story.headline} | ${project.story.kicker}`
   }, [project?.story])
 
@@ -220,7 +224,14 @@ export default function PlanStory() {
   const numbers = story?.chapters.find((c) => c.id === 'numbers')
   const selected = useMemo(() => model?.lots.find((l) => l.lot === lot) ?? null, [model, lot])
   const modeInfo = MODES.find((m) => m.id === mode)!
-  const modeNote = model?.ui?.modes?.[mode] ?? modeInfo.note
+  // Without lots and envelopes (KML 3D or table 5 + SHP) the model shows today only.
+  const hasMassing = !!model?.massing?.features?.length
+  const modes = hasMassing ? MODES : MODES.filter((m) => m.id === 'today')
+  const modeNote =
+    model?.ui?.modes?.[mode] ??
+    (hasMassing || !model
+      ? modeInfo.note
+      : 'היום: גבול המתחם בקו מקווקו והבניינים הקיימים סביבו. המותר והנפח החדש יוצגו כשיעלו טבלה 5 וקובץ KML של התוכנית.')
   const lotChecks = model?.checks ?? []
 
   async function setPublished(v: boolean) {
@@ -321,6 +332,7 @@ export default function PlanStory() {
             <p className="mag-deck">{story.deck}</p>
             <div className="mag-meta">
               <span className="mag-pill light">{story.status.label}</span>
+              {story.level === 'basic' && <span className="mag-pill">עמוד בסיסי</span>}
               <span>{story.status.text}</span>
             </div>
           </div>
@@ -347,7 +359,7 @@ export default function PlanStory() {
             </div>
           )}
           <div className="mag-modes" role="group" aria-label="מצב תצוגה">
-            {MODES.map((m) => (
+            {modes.map((m) => (
               <button key={m.id} aria-pressed={mode === m.id} onClick={() => setMode(m.id)}>
                 {m.label}
               </button>
@@ -366,14 +378,18 @@ export default function PlanStory() {
                   {model.ui?.demolish_label ?? 'להריסה'}
                 </span>
               )}
-              <span>
-                <i style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid #8A8A88' }} />
-                מותר
-              </span>
-              <span>
-                <i style={{ background: 'linear-gradient(180deg,#C4C4C2,#8E8E8C)' }} />
-                נפח לדוגמה
-              </span>
+              {hasMassing && (
+                <>
+                  <span>
+                    <i style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid #8A8A88' }} />
+                    מותר
+                  </span>
+                  <span>
+                    <i style={{ background: 'linear-gradient(180deg,#C4C4C2,#8E8E8C)' }} />
+                    נפח לדוגמה
+                  </span>
+                </>
+              )}
             </div>
           </div>
           {model && (
