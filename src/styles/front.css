@@ -106,3 +106,5 @@
 .fp-head > *, .fp-grid > * { min-width: 0; }
 .fp-pill input { width: 100%; }
 @media (max-width: 760px) { .fp-pill button { padding: 0 20px; min-height: 46px; } .fp-pill input { font-size: 17px; padding: 8px 12px; } }
+.fp-blue { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; color: var(--f-ink-2); }
+.fp-blue i { display: inline-block; width: 22px; height: 12px; border: 2px solid; border-radius: 2px; }

@@ -4,7 +4,7 @@ import L from 'leaflet'
 import type { FeatureCollection } from 'geojson'
 import 'leaflet/dist/leaflet.css'
 import type { LonLat, Project } from '../lib/types'
-import { STATUS_COLOR } from '../lib/labels'
+import { BLUE_LINE } from '../lib/labels'
 import { ASHDOD_BOUNDS, ASHDOD_CENTER, bboxOf } from '../lib/geo'
 
 const meIcon = L.divIcon({ className: '', html: '<div class="me-pin"></div>', iconSize: [18, 18], iconAnchor: [9, 9] })
@@ -173,15 +173,15 @@ function ProjectLayer({
   onHover?: (id: string | null) => void
   tooltip: boolean
 }) {
-  const color = STATUS_COLOR[project.status]
+  const color = BLUE_LINE
   const emphasis = selected || hovered
   const style = useMemo(
     () => ({
       color,
-      weight: emphasis ? 3.5 : 2,
+      weight: emphasis ? 3.5 : 2.2,
       opacity: dimmed ? 0.5 : 1,
       fillColor: color,
-      fillOpacity: emphasis ? 0.38 : dimmed ? 0.1 : 0.22,
+      fillOpacity: emphasis ? 0.24 : dimmed ? 0.04 : 0.1,
     }),
     [color, emphasis, dimmed],
   )

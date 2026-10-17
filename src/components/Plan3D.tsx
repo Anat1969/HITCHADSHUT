@@ -56,6 +56,8 @@ export default function Plan3D({ model, mode, selectedLot, onSelectLot }: Props)
       map.addSource('context', { type: 'geojson', data: model.context })
       map.addSource('boundary', { type: 'geojson', data: model.boundary })
       map.addSource('massing', { type: 'geojson', data: model.massing })
+      if (model.parcels) map.addSource('parcels', { type: 'geojson', data: model.parcels })
+      if (model.demolish) map.addSource('demolish', { type: 'geojson', data: model.demolish })
 
       map.addLayer({
         id: 'context',
@@ -80,6 +82,25 @@ export default function Plan3D({ model, mode, selectedLot, onSelectLot }: Props)
         source: 'boundary',
         paint: { 'line-color': '#111111', 'line-width': 1.4, 'line-dasharray': [3, 2] },
       })
+      if (model.parcels)
+        map.addLayer({
+          id: 'parcels',
+          type: 'line',
+          source: 'parcels',
+          paint: { 'line-color': '#8A8A88', 'line-width': 0.8 },
+        })
+      if (model.demolish)
+        map.addLayer({
+          id: 'demolish',
+          type: 'fill-extrusion',
+          source: 'demolish',
+          paint: {
+            'fill-extrusion-color': '#5E5E5C',
+            'fill-extrusion-height': ['get', 'h'],
+            'fill-extrusion-opacity': 0.92,
+            'fill-extrusion-vertical-gradient': true,
+          },
+        })
       map.addLayer({
         id: 'footprint',
         type: 'line',
@@ -155,6 +176,8 @@ export default function Plan3D({ model, mode, selectedLot, onSelectLot }: Props)
       map.setPaintProperty('tower', 'fill-extrusion-base', ['*', ['get', 'base'], g])
       map.setPaintProperty('envelope', 'fill-extrusion-height', ['*', ['get', 'top'], e])
       map.setPaintProperty('envelope', 'fill-extrusion-opacity', mode === 'after' ? 0.14 : 0.3)
+      // Buildings to demolish stand in "today", sink while the plan rises.
+      if (map.getLayer('demolish')) map.setPaintProperty('demolish', 'fill-extrusion-height', ['*', ['get', 'h'], 1 - Math.max(e, g)])
       if (k < 1) anim.current = requestAnimationFrame(step)
     }
     anim.current = requestAnimationFrame(step)

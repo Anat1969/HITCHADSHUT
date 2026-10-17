@@ -57,3 +57,6 @@ export const FEEDBACK_PROMPT: Record<FeedbackKind, string> = {
   concern: 'מה מדאיג אתכם? כמה שיותר ספציפי, כך נוכל לבדוק טוב יותר.',
   idea: 'איזה רעיון יכול לשפר את הפרויקט או את המרחב סביבו?',
 }
+
+/** Plan boundaries ("the blue line") are drawn in blue on every map, as on plan drawings. */
+export const BLUE_LINE = '#1D4ED8'

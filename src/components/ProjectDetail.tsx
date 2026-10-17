@@ -4,6 +4,7 @@ import { KIND_LABEL, STATUS_COLOR, STATUS_LABEL, TRACK_LABEL } from '../lib/labe
 import { distanceMeters, formatDistance, walkingMinutes } from '../lib/geo'
 import { embedUrl, mediaSrc, sortMedia } from '../lib/media'
 import StageTrack from './StageTrack'
+import { planPath } from '../lib/data'
 import Lightbox from './Lightbox'
 import FeedbackSection from './FeedbackSection'
 
@@ -86,7 +87,7 @@ export default function ProjectDetail({ project: p, quarters, me, onBack, previe
         )}
         {p.summary && <p className="lead">{p.summary}</p>}
         {p.story && p.plan_number && (
-          <a className="btn btn-primary" style={{ justifySelf: 'start' }} href={`/plan/${p.plan_number}`}>
+          <a className="btn btn-primary" style={{ justifySelf: 'start' }} href={planPath(p.plan_number)}>
             לסיפור המלא של התוכנית, עם מודל תלת-ממדי
           </a>
         )}
@@ -164,7 +165,9 @@ export default function ProjectDetail({ project: p, quarters, me, onBack, previe
       {p.description && (
         <div className="section">
           <h3>על הפרויקט</h3>
-          <p className="prose">{p.description}</p>
+          <p className="prose">
+            <Linkified text={p.description} />
+          </p>
         </div>
       )}
 
@@ -214,7 +217,7 @@ export default function ProjectDetail({ project: p, quarters, me, onBack, previe
             {files.map((m) => (
               <a key={m.id} href={mediaSrc(m) ?? '#'} target="_blank" rel="noreferrer" download={m.kind === 'kml'}>
                 {m.caption || (m.kind === 'kml' ? 'קובץ גבולות התוכנית' : 'מסמך')}
-                <span>{m.kind === 'kml' ? 'KML · לפתיחה ב-Google Earth' : 'PDF'}</span>
+                <span>{m.kind === 'kml' ? 'KML · לפתיחה ב-Google Earth' : /\.pdf($|\?)/i.test(mediaSrc(m) ?? '') ? 'PDF' : 'קישור'}</span>
               </a>
             ))}
           </div>
@@ -239,5 +242,23 @@ export default function ProjectDetail({ project: p, quarters, me, onBack, previe
         />
       )}
     </article>
+  )
+}
+
+/** Plain text with its http(s) links made clickable. */
+function Linkified({ text }: { text: string }) {
+  const parts = text.split(/(https?:\/\/\S+)/g)
+  return (
+    <>
+      {parts.map((t, i) =>
+        /^https?:\/\//.test(t) ? (
+          <a key={i} href={t} target="_blank" rel="noreferrer">
+            {t.includes('mavat') ? 'אתר תכנון זמין' : t}
+          </a>
+        ) : (
+          t
+        ),
+      )}
+    </>
   )
 }
