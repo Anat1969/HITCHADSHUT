@@ -7,6 +7,7 @@ import Plan3D, { type ViewMode } from '../components/Plan3D'
 import UnitsCompare from '../components/UnitsCompare'
 import FeedbackSection from '../components/FeedbackSection'
 import { embedUrl, mediaSrc } from '../lib/media'
+import { planNumberCandidates } from '../lib/data'
 
 const MODES: { id: ViewMode; label: string; note: string }[] = [
   { id: 'today', label: 'היום', note: 'המבנים הקיימים סביב, וגבולות התוכנית בקו מקווקו. רוב המגרשים עוד לא בנויים.' },
@@ -172,9 +173,11 @@ export default function PlanStory() {
     supabase
       .from('plan_projects')
       .select('*, plan_media!plan_media_project_id_fkey(*)')
-      .eq('plan_number', planNumber ?? '')
-      .maybeSingle()
-      .then(({ data }) => setProject((data as ProjectWithMedia) ?? null))
+      .in('plan_number', planNumberCandidates(planNumber ?? ''))
+      .then(({ data }) => {
+        const rows = (data ?? []) as ProjectWithMedia[]
+        setProject(rows.find((r) => r.story) ?? rows[0] ?? null)
+      })
     try {
       setIsStaff(localStorage.getItem('mnv-admin') === '1')
     } catch {
@@ -182,13 +185,26 @@ export default function PlanStory() {
     }
   }, [planNumber])
 
+  // A model is a static file (model_url) or a row in plan_models, built in the database.
   useEffect(() => {
-    if (!project?.model_url) return
-    fetch(project.model_url)
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then(setModel)
+    if (!project?.story) return
+    const load: Promise<PlanModel | null> = project.model_url
+      ? fetch(project.model_url).then((r) => (r.ok ? r.json() : Promise.reject()))
+      : Promise.resolve(
+          supabase
+            .from('plan_models')
+            .select('model')
+            .eq('plan_number', project.plan_number ?? '')
+            .maybeSingle()
+            .then(({ data, error }) => {
+              if (error) throw error
+              return (data?.model as PlanModel) ?? null
+            }),
+        )
+    load
+      .then((m) => (m ? setModel(m) : setModelError(true)))
       .catch(() => setModelError(true))
-  }, [project?.model_url])
+  }, [project?.model_url, project?.plan_number, project?.story])
 
   useEffect(() => {
     if (project?.story) document.title = `${project.story.headline} | ${project.story.kicker}`
@@ -198,6 +214,7 @@ export default function PlanStory() {
   const numbers = story?.chapters.find((c) => c.id === 'numbers')
   const selected = useMemo(() => model?.lots.find((l) => l.lot === lot) ?? null, [model, lot])
   const modeInfo = MODES.find((m) => m.id === mode)!
+  const modeNote = model?.ui?.modes?.[mode] ?? modeInfo.note
   const lotChecks = model?.checks ?? []
 
   async function setPublished(v: boolean) {
@@ -331,12 +348,18 @@ export default function PlanStory() {
             ))}
           </div>
           <div className="mag-mode-note">
-            {modeInfo.note}
+            {modeNote}
             <div className="mag-legend">
               <span>
                 <i style={{ background: '#D2D2D0' }} />
                 קיים
               </span>
+              {model?.demolish && (
+                <span>
+                  <i style={{ background: '#5E5E5C' }} />
+                  {model.ui?.demolish_label ?? 'להריסה'}
+                </span>
+              )}
               <span>
                 <i style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid #8A8A88' }} />
                 מותר
@@ -354,45 +377,67 @@ export default function PlanStory() {
                   <button className="close" onClick={() => setLot(null)}>
                     סגירה
                   </button>
-                  <span className="mag-label">מגרש</span>
-                  <h3>{selected.lot}</h3>
-                  <dl>
-                    <div>
-                      <dt>קומות</dt>
-                      <dd>{selected.floors_above}</dd>
-                    </div>
-                    <div>
-                      <dt>גובה מרבי</dt>
-                      <dd>{selected.height_m} מ׳</dd>
-                    </div>
-                    <div>
-                      <dt>שטח המגרש</dt>
-                      <dd>{nf.format(selected.lot_size)} מ"ר</dd>
-                    </div>
-                    <div>
-                      <dt>תכסית מרבית</dt>
-                      <dd>{selected.coverage_pct}%</dd>
-                    </div>
-                    <div>
-                      <dt>מרתפים</dt>
-                      <dd>{selected.floors_below}+ קומות</dd>
-                    </div>
-                    <div>
-                      <dt>דירות קטנות</dt>
-                      <dd>{selected.small_75_min} לפחות</dd>
-                    </div>
-                  </dl>
-                  <UnitsCompare lot={selected} />
-                  <span style={{ fontSize: 12, color: '#555555', lineHeight: 1.5 }}>
-                    אותו בניין, יותר דירות. משמאל: דירות עד 75 מ"ר באפור כהה, עד 55 מ"ר בשחור. מספר הדירות היום וגודל הדירה הממוצע הם
-                    הערכה לפי הערה 3 לטבלה 5.
-                    {selected.mixed && ' במגרש יש גם חזית מסחרית לרחוב.'}
-                  </span>
+                  {selected.panel ? (
+                    <>
+                      <span className="mag-label">{selected.title ?? 'מגרש'}</span>
+                      <h3>{selected.lot}</h3>
+                      <dl>
+                        {selected.panel.map((r) => (
+                          <div key={r.label}>
+                            <dt>{r.label}</dt>
+                            <dd>{r.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                      {selected.note && <span style={{ fontSize: 12, color: '#555555', lineHeight: 1.5 }}>{selected.note}</span>}
+                    </>
+                  ) : (
+                    <>
+                      <span className="mag-label">מגרש</span>
+                      <h3>{selected.lot}</h3>
+                      <dl>
+                        <div>
+                          <dt>קומות</dt>
+                          <dd>{selected.floors_above}</dd>
+                        </div>
+                        <div>
+                          <dt>גובה מרבי</dt>
+                          <dd>{selected.height_m} מ׳</dd>
+                        </div>
+                        <div>
+                          <dt>שטח המגרש</dt>
+                          <dd>{nf.format(selected.lot_size)} מ"ר</dd>
+                        </div>
+                        <div>
+                          <dt>תכסית מרבית</dt>
+                          <dd>{selected.coverage_pct}%</dd>
+                        </div>
+                        <div>
+                          <dt>מרתפים</dt>
+                          <dd>{selected.floors_below}+ קומות</dd>
+                        </div>
+                        <div>
+                          <dt>דירות קטנות</dt>
+                          <dd>{selected.small_75_min} לפחות</dd>
+                        </div>
+                      </dl>
+                      {selected.units_before_est != null && <UnitsCompare lot={selected} />}
+                      <span style={{ fontSize: 12, color: '#555555', lineHeight: 1.5 }}>
+                        אותו בניין, יותר דירות. משמאל: דירות עד 75 מ"ר באפור כהה, עד 55 מ"ר בשחור. מספר הדירות היום וגודל הדירה הממוצע הם
+                        הערכה לפי הערה 3 לטבלה 5.
+                        {selected.mixed && ' במגרש יש גם חזית מסחרית לרחוב.'}
+                      </span>
+                    </>
+                  )}
                 </>
               ) : (
                 <>
-                  <span className="mag-label">33 מגרשים · {nf.format(model.summary.units_after)} דירות</span>
-                  <p className="hint">לחצו על מגדל כדי לראות מה התוכנית משנה במגרש: אותו בניין, ועוד כמה דירות.</p>
+                  <span className="mag-label">
+                    {model.ui?.summary_label ?? `${model.summary.lots} מגרשים · ${nf.format(model.summary.units_after)} דירות`}
+                  </span>
+                  <p className="hint">
+                    {model.ui?.hint ?? 'לחצו על מגדל כדי לראות מה התוכנית משנה במגרש: אותו בניין, ועוד כמה דירות.'}
+                  </p>
                 </>
               )}
             </aside>

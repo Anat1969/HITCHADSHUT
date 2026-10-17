@@ -107,3 +107,14 @@ export async function geocodeAshdod(query: string): Promise<GeocodeResult[]> {
     point: [Number(r.lon), Number(r.lat)],
   }))
 }
+
+/** URL of a plan story page. Plan numbers like "תמל/2022" carry a slash, so it becomes a dash. */
+export function planPath(planNumber: string): string {
+  return `/plan/${encodeURIComponent(planNumber.replace(/\s+/g, '').replace(/\//g, '-'))}`
+}
+
+/** Plan numbers a /plan/<slug> URL may stand for: as written, and with dashes read back as slashes. */
+export function planNumberCandidates(slug: string): string[] {
+  const s = slug.trim()
+  return [...new Set([s, s.replace(/-/g, '/'), s.replace(/-/g, '/ ')])]
+}

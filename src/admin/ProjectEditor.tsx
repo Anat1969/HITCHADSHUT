@@ -4,7 +4,7 @@ import MapView, { type MapFocus } from '../components/MapView'
 import ProjectDetail from '../components/ProjectDetail'
 import MediaManager from './MediaManager'
 import { useToast } from './toast'
-import { fetchProject, fetchQuarters } from '../lib/data'
+import { fetchProject, fetchQuarters, planPath } from '../lib/data'
 import { MEDIA_BUCKET, supabase } from '../lib/supabase'
 import { centerOf, isNearAshdod } from '../lib/geo'
 import { parseKmlFile } from '../lib/kml'
@@ -256,7 +256,7 @@ export default function ProjectEditor() {
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {!isNew && form.story && form.plan_number && (
-            <a className="btn" href={`/plan/${form.plan_number}`} target="_blank" rel="noreferrer">
+            <a className="btn" href={planPath(form.plan_number)} target="_blank" rel="noreferrer">
               לעמוד התוכנית
             </a>
           )}

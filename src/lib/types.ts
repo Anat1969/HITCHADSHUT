@@ -121,25 +121,30 @@ export interface PlanStory {
 export interface LotData {
   lot: number
   mixed: boolean
-  lot_size: number
-  main_above: number
-  service_above: number
-  service_below: number
-  coverage_pct: number
   units: number
-  units_before_est: number
-  avg_unit_m2_after: number
-  avg_unit_m2_before_est: number
-  small_75_min: number
-  micro_55_min: number
-  density: number
-  height_m: number
   floors_above: number
-  floors_below: number
-  floor_plate_m2: number
-  envelope_m2: number
-  commercial_main?: number
+  height_m: number
+  lot_size: number
   center: [number, number]
+  /** Optional per-lot fields. Plans built from table 5 with a before/after count have them all. */
+  main_above?: number
+  service_above?: number
+  service_below?: number
+  coverage_pct?: number
+  units_before_est?: number
+  avg_unit_m2_after?: number
+  avg_unit_m2_before_est?: number
+  small_75_min?: number
+  micro_55_min?: number
+  density?: number
+  floors_below?: number
+  floor_plate_m2?: number
+  envelope_m2?: number
+  commercial_main?: number
+  /** Generic lot card: when present it replaces the fixed fields. */
+  title?: string
+  panel?: { label: string; value: string }[]
+  note?: string
 }
 
 export interface PlanModel {
@@ -166,4 +171,15 @@ export interface PlanModel {
   massing: FeatureCollection
   boundary: FeatureCollection
   context: FeatureCollection
+  /** Existing buildings the plan demolishes: shown in "today", gone in "after". */
+  demolish?: FeatureCollection
+  /** Lot outlines (land use), drawn as thin lines. */
+  parcels?: FeatureCollection
+  /** Plan-specific texts for the model stage. */
+  ui?: {
+    modes?: Partial<Record<'today' | 'allowed' | 'after', string>>
+    summary_label?: string
+    hint?: string
+    demolish_label?: string
+  }
 }

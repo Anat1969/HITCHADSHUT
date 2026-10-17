@@ -3,8 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import MapView, { type MapFocus } from '../components/MapView'
 import ProjectDetail, { coverOf } from '../components/ProjectDetail'
 import type { Feedback, LonLat, ProjectKind, ProjectStatus, ProjectWithMedia, Quarter } from '../lib/types'
-import { KIND_LABEL, STATUS_COLOR, STATUS_LABEL, STATUS_ORDER } from '../lib/labels'
-import { fetchLatestAnswered, fetchPublishedProjects, fetchQuarters, geocodeAshdod, type GeocodeResult } from '../lib/data'
+import { BLUE_LINE, KIND_LABEL, STATUS_COLOR, STATUS_LABEL, STATUS_ORDER } from '../lib/labels'
+import { fetchLatestAnswered, fetchPublishedProjects, fetchQuarters, geocodeAshdod, planPath, type GeocodeResult } from '../lib/data'
 import { distanceMeters, formatDistance } from '../lib/geo'
 import { mediaSrc } from '../lib/media'
 import '../styles/front.css'
@@ -97,7 +97,7 @@ export default function Home() {
   const open = useCallback(
     (id: string) => {
       const p = projects?.find((x) => x.id === id)
-      if (p?.story && p.plan_number) navigate(`/plan/${p.plan_number}`)
+      if (p?.story && p.plan_number) navigate(planPath(p.plan_number))
       else navigate(`/p/${id}`)
     },
     [navigate, projects],
@@ -166,8 +166,12 @@ export default function Home() {
     return quarters.filter((q) => ids.has(q.id))
   }, [projects, quarters])
 
-  const featured = filtered[0] ?? null
-  const rest = filtered.slice(1)
+  // The cover story is the nearest project with a full plan page, otherwise the first one.
+  const featured = filtered.find((p) => p.story) ?? filtered[0] ?? null
+  // "More in the city": every urban renewal compound, then everything else but the cover story.
+  const renewal = filtered.filter((p) => p.kind === 'urban_renewal')
+  const others = filtered.filter((p) => p.kind !== 'urban_renewal' && p.id !== featured?.id)
+  const rest = [...(me ? renewal : [...renewal].sort(byStage)), ...others]
   const featuredCover = featured ? coverImage(featured) : null
   const today = new Intl.DateTimeFormat('he-IL', { month: 'long', year: 'numeric' }).format(new Date())
 
@@ -295,7 +299,10 @@ export default function Home() {
             </article>
 
             <nav className="fp-list" aria-label="עוד בסביבה">
-              <span className="fp-label rule">{me ? 'עוד קרוב אליך' : 'עוד בעיר'}</span>
+              <span className="fp-label rule">
+                {me ? 'עוד קרוב אליך' : 'עוד בעיר'}
+                {renewal.length > 0 ? ` · ${renewal.length} מתחמי התחדשות עירונית` : ''}
+              </span>
               {rest.length === 0 ? (
                 <p className="fp-soon">פרויקטים נוספים יעלו כאן בקרוב, עם הדמיות, סרטונים ומקום לשאלות.</p>
               ) : (
@@ -310,13 +317,18 @@ export default function Home() {
                           onMouseEnter={() => setHoverId(p.id)}
                           onMouseLeave={() => setHoverId(null)}
                         >
-                          <span className="n">{String(i + 2).padStart(2, '0')}</span>
+                          <span className="n">{String(i + 1).padStart(2, '0')}</span>
                           <span className="t">
                             <small>
-                              {STATUS_LABEL[p.status]}
+                              {p.kind === 'urban_renewal' ? 'התחדשות עירונית' : KIND_LABEL[p.kind]} · {STATUS_LABEL[p.status]}
                               {d != null ? ` · ${formatDistance(d)}` : ''}
                             </small>
                             {p.title}
+                            {p.units_existing != null && p.units_planned != null && (
+                              <small>
+                                {p.units_existing.toLocaleString('he-IL')} דירות היום · {p.units_planned.toLocaleString('he-IL')} בתוכנית
+                              </small>
+                            )}
                           </span>
                         </button>
                       </li>
@@ -343,6 +355,10 @@ export default function Home() {
                   meRadius={NEAR_METERS}
                   focus={focus}
                 />
+              </div>
+              <div className="fp-blue">
+                <i style={{ borderColor: BLUE_LINE, background: `${BLUE_LINE}1A` }} />
+                הקו הכחול: גבול כל תוכנית ומתחם
               </div>
               <div className="fp-swatches" role="group" aria-label="סינון לפי שלב">
                 {STATUS_ORDER.map((st) => (
@@ -405,6 +421,17 @@ export default function Home() {
         </footer>
       </div>
     </div>
+  )
+}
+
+const STAGE_RANK: Record<string, number> = { construction: 0, permit: 1, approved: 2, planning: 3, completed: 4 }
+
+/** Stage first (what is happening soonest), then by name. */
+function byStage(a: ProjectWithMedia, b: ProjectWithMedia): number {
+  return (
+    Number(!a.story) - Number(!b.story) ||
+    STAGE_RANK[a.status] - STAGE_RANK[b.status] ||
+    a.title.localeCompare(b.title, 'he')
   )
 }
 

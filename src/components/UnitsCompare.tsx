@@ -53,7 +53,13 @@ function Facade({
   )
 }
 
-export default function UnitsCompare({ lot }: { lot: LotData }) {
+export default function UnitsCompare({ lot: l }: { lot: LotData }) {
+  const lot = {
+    ...l,
+    units_before_est: l.units_before_est ?? l.units,
+    small_75_min: l.small_75_min ?? 0,
+    micro_55_min: l.micro_55_min ?? 0,
+  }
   const H = 220
   const W = 92
   return (
