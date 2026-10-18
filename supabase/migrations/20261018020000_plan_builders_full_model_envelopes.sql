@@ -66,7 +66,12 @@ begin
     select l.*, ST_Area(env) env_area,
            -- typical floor: built area above ground spread over the floors, never over the coverage or the envelope
            least(
-             coalesce((coalesce(main_above, 0) + coalesce(service_above, 0)) / nullif(floors_above, 0), geo_area * coalesce(coverage_pct, 60) / 100),
+             -- with a podium, the podium floors take their share first and the tower gets the rest
+             coalesce((coalesce(main_above, 0) + coalesce(service_above, 0)
+                       - case when tline is not null and podium_floors > 0
+                              then podium_floors * least(geo_area * coalesce(coverage_pct, 100) / 100, ST_Area(env)) else 0 end)
+                      / nullif(floors_above - case when tline is not null and podium_floors > 0 then podium_floors else 0 end, 0),
+                      geo_area * coalesce(coverage_pct, 60) / 100),
              geo_area * coalesce(coverage_pct, 100) / 100,
              coalesce(max_floor_m2, 'Infinity'::numeric),
              ST_Area(coalesce(tline, env)) * 0.98)::numeric plate
