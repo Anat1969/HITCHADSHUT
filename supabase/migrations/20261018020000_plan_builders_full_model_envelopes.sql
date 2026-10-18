@@ -62,7 +62,8 @@ begin
            ST_SimplifyPreserveTopology(ST_Intersection(tl.g, geo.g), 0.2) tline
     from t5 join geo using (lot)
     left join lines e on e.lot = t5.lot and e.kind = 'envelope'
-    left join lines tl on tl.lot = t5.lot and tl.kind = 'tower'
+    -- an inner line on a low building marks an upper-floor setback, not a tower
+    left join lines tl on tl.lot = t5.lot and tl.kind = 'tower' and coalesce(t5.floors_above, 0) >= 12
   ), lots as (
     select l.*, ST_Area(env) env_area,
            -- typical floor: built area above ground spread over the floors, never over the coverage or the envelope
