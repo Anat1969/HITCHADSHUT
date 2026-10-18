@@ -11,7 +11,8 @@ How it works:
   - Land-use polygons = filled vector paths inside the map frame (not black/white).
     The use name comes from the legend swatch (a filled rect outside the frame) of the same colour.
   - Lot numbers = integer words inside a small blue stroked box (the "תא שטח ומספרו" symbol).
-  - ITM->WGS84 with pyproj when installed, else a built-in TM inverse + Helmert (EPSG:2039 towgs84).
+  - ITM->WGS84 with pyproj when installed, else a built-in TM inverse + Helmert (same EPSG
+    parameters; checked against pyproj to a few cm).
 
 Limits:
   - Hatch overlays (zchut maavar, kikar grid) are ignored; only the solid fill decides the use.
@@ -104,7 +105,8 @@ def fit_grid(words):
 # --- ITM (EPSG:2039) -> WGS84 without pyproj -------------------------------------------
 GRS80 = (6378137.0, 1 / 298.257222101)
 WGS84 = (6378137.0, 1 / 298.257223563)
-TOWGS84 = (-24.0024, -17.1032, -17.8444, -0.33077, -1.85269, 1.66969, 5.4262)
+# EPSG 'Israel 1993 to WGS 84 (2)', coordinate-frame convention (what PROJ picks, 0.5 m)
+TOWGS84 = (23.772, 17.49, 17.859, 0.3132, 1.85274, -1.67299, -5.4262)
 
 
 def tm_inverse(E, N, a=GRS80[0], f=GRS80[1], lat0=31.7343936111111, lon0=35.2045169444444,
@@ -143,10 +145,10 @@ def helmert_to_wgs84(lat, lon):
     x, y, z = to_xyz(lat, lon, *GRS80)
     tx, ty, tz, rx, ry, rz, s = TOWGS84
     rx, ry, rz = (math.radians(r / 3600) for r in (rx, ry, rz))
-    k = 1 + s * 1e-6  # position-vector convention (PROJ towgs84)
-    X = tx + k * (x - rz * y + ry * z)
-    Y = ty + k * (rz * x + y - rx * z)
-    Z = tz + k * (-ry * x + rx * y + z)
+    k = 1 + s * 1e-6  # coordinate-frame rotation
+    X = tx + k * (x + rz * y - ry * z)
+    Y = ty + k * (-rz * x + y + rx * z)
+    Z = tz + k * (ry * x - rx * y + z)
     a, f = WGS84
     e2 = f * (2 - f)
     p = math.hypot(X, Y)
@@ -183,6 +185,7 @@ def rings_of(obj):
             cur = []
     if len(cur) >= 3:
         rings.append(cur)
+    rings = [r[:-1] if len(r) > 3 and r[0] == r[-1] else r for r in rings]
     if not rings and obj.get('pts') and len(obj['pts']) >= 3:
         rings = [list(obj['pts'])]
     return [[tuple(p) for p in r] for r in rings]
