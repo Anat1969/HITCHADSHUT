@@ -1,0 +1,70 @@
+{
+  "plan_number": "603-1097815",
+  "source": "הוראות התכנית, טבלה 5 (עמוד 18 מתוך 25, מונה תדפיס 47)",
+  "total_units": 830,
+  "total_units_ref": "סעיף 2.2 ס' 2: הריסת 186 יח\"ד ובמקומן 830 יח\"ד, מתוכן 249 קטנות (30%); סכום טבלה 5: 303+50+182+193+102 = 830. הוראות טבלה 5 ס' ב: אפשר להוסיף עד 83 דיוריות (830+83 = 913, המספר במאגר data.gov.il). ס' ו: 30 יח\"ד מותנות בהיתר בנייה בתוך 5 שנים, אחרת 800 יח\"ד.",
+  "lots": [
+    {
+      "lot": 2, "use": "מגורים ד", "lot_size": 3663, "units": 303,
+      "floors_above": 32, "floors_below": 4, "height_m": null, "coverage_pct": null,
+      "main_above": 37269, "service_above": null, "service_below": 14652, "commercial_main": 1360,
+      "ref": "טבלה 5, תא שטח 2, מגורים + מסחר",
+      "notes": "32 קומות = קרקע + 31 + קומת גג טכני חלקית (הערה 1). שטח מתחת לכניסה הקובעת 14,652 מ\"ר (בכותרת הטבלה: עיקרי). מסחר 1,360 מ\"ר מעל הכניסה. מרפסות 3,636 מ\"ר בנוסף. גובה במטרים ותכסית לא נקבעו בטבלה. תכסית קומה במגדל עם 6 יח\"ד בקומה עד 750 מ\"ר בלי מרפסות (סעיף 4.1.2 א ס' 1). קומת מסד בקו 0 לרחובות (סעיף 4.1.2 א), מספר קומות המסד לא נקבע.",
+      "max_floor_m2": 750
+    },
+    {
+      "lot": 3, "use": "מגורים ד", "lot_size": 1055, "units": 50,
+      "floors_above": 10, "floors_below": 4, "height_m": null, "coverage_pct": null,
+      "main_above": 6150, "service_above": null, "service_below": 4220, "commercial_main": 300,
+      "ref": "טבלה 5, תא שטח 3, מגורים + מסחר",
+      "notes": "10 קומות. שטח מתחת לכניסה הקובעת 4,220 מ\"ר. מסחר 300 מ\"ר. מרפסות 600 מ\"ר בנוסף. גובה במטרים ותכסית לא נקבעו בטבלה."
+    },
+    {
+      "lot": 4, "use": "מגורים ד", "lot_size": 1682, "units": 182,
+      "floors_above": 32, "floors_below": 4, "height_m": null, "coverage_pct": null,
+      "main_above": 22386, "service_above": null, "service_below": 6728, "commercial_main": 1100,
+      "ref": "טבלה 5, תא שטח 4, מגורים + תעסוקה",
+      "notes": "32 קומות = קרקע + 31 + קומת גג טכני חלקית (הערה 1). תעסוקה 1,100 מ\"ר מעל הכניסה (בשדה commercial_main). מרפסות 2,184 מ\"ר בנוסף. שימושים ציבוריים מבונים בתא זה (סעיף 6.1 ס' 10). תכסית קומה במגדל עם 6 יח\"ד בקומה עד 750 מ\"ר (סעיף 4.1.2 א ס' 1).",
+      "max_floor_m2": 750
+    },
+    {
+      "lot": 5, "use": "מגורים ד", "lot_size": 1550, "units": 193,
+      "floors_above": 32, "floors_below": 4, "height_m": null, "coverage_pct": null,
+      "main_above": 23739, "service_above": null, "service_below": 6200, "commercial_main": 550,
+      "ref": "טבלה 5, תא שטח 5, מגורים + מסחר",
+      "notes": "32 קומות = קרקע + 31 + קומת גג טכני חלקית (הערה 1). מסחר 550 מ\"ר. מרפסות 2,316 מ\"ר בנוסף. תכסית קומה במגדל עם 6 יח\"ד בקומה עד 750 מ\"ר (סעיף 4.1.2 א ס' 1).",
+      "max_floor_m2": 750
+    },
+    {
+      "lot": 6, "use": "מגורים ד", "lot_size": 2102, "units": 102,
+      "floors_above": 10, "floors_below": 4, "height_m": null, "coverage_pct": null,
+      "main_above": 12546, "service_above": null, "service_below": 8410, "commercial_main": 450,
+      "ref": "טבלה 5, תא שטח 6, מגורים + מבנים ומוסדות ציבור",
+      "notes": "10 קומות. מבנים ומוסדות ציבור 450 מ\"ר בתוך הבניין (בשדה commercial_main; סעיף 6.1 ס' 10). מרפסות 1,224 מ\"ר בנוסף."
+    },
+    {
+      "lot": 65, "use": "מבנים ומוסדות ציבור", "lot_size": 3455, "units": 0,
+      "floors_above": 6, "floors_below": 2, "height_m": null, "coverage_pct": null,
+      "main_above": 8960, "service_above": null, "service_below": 3840, "commercial_main": null,
+      "ref": "טבלה 5, תא שטח 65",
+      "notes": "מרכז קהילתי ושטחי ציבור חלופיים למבנים שנהרסים (סעיף 4.2.2 ג). מרפסות 2,410 מ\"ר בנוסף. 25% מתכסית הקרקע להצללה (הוראות טבלה 5 ס' ה)."
+    },
+    {
+      "lot": 64, "use": "מבנים ומוסדות ציבור", "lot_size": 7436, "units": 0,
+      "floors_above": 6, "floors_below": 2, "height_m": null, "coverage_pct": null,
+      "main_above": 22036, "service_above": null, "service_below": 22036, "commercial_main": null,
+      "ref": "טבלה 5, תא שטח 64",
+      "notes": "בית ספר יסודי 24 כיתות (סעיף 4.2.2 ג)."
+    },
+    {"lot": 11, "use": "שטח ציבורי פתוח", "lot_size": 522, "units": 0, "floors_above": null, "floors_below": 3, "height_m": null, "coverage_pct": null, "main_above": null, "service_above": null, "service_below": 630, "commercial_main": null, "ref": "טבלה 5, תא שטח 11 (חניון)", "notes": "חניון מתחת לשצ\"פ לדיירי תאים 2 ו-5 (הערה 2), מקומה -2 (הערה 3)."},
+    {"lot": 14, "use": "שטח ציבורי פתוח", "lot_size": 1188, "units": 0, "floors_above": null, "floors_below": 3, "height_m": null, "coverage_pct": null, "main_above": null, "service_above": null, "service_below": 1430, "commercial_main": null, "ref": "טבלה 5, תא שטח 14 (חניון)", "notes": "חניון לדיירי תאים 2 ו-5 (הערה 2), מקומה -2 (הערה 3)."},
+    {"lot": 15, "use": "שטח ציבורי פתוח", "lot_size": 1732, "units": 0, "floors_above": null, "floors_below": 3, "height_m": null, "coverage_pct": null, "main_above": null, "service_above": null, "service_below": 2080, "commercial_main": null, "ref": "טבלה 5, תא שטח 15 (חניון)", "notes": "עיקרי+שירות, חניון לדיירי תאים 3 ו-6 (הערה 4)."},
+    {"lot": 16, "use": "שטח ציבורי פתוח", "lot_size": 920, "units": 0, "floors_above": null, "floors_below": 3, "height_m": null, "coverage_pct": null, "main_above": null, "service_above": null, "service_below": 1104, "commercial_main": null, "ref": "טבלה 5, תא שטח 16 (חניון)", "notes": "עיקרי+שירות, חניון לדיירי תא 4 (הערה 5)."},
+    {"lot": 2005, "use": "דרך מאושרת", "lot_size": 4258, "units": 0, "floors_above": null, "floors_below": 3, "height_m": null, "coverage_pct": null, "main_above": null, "service_above": null, "service_below": 3870, "commercial_main": null, "ref": "טבלה 5, תא שטח 2005 (חניון)", "notes": "חניון מתחת לדרך מקומה -2 (הערה 7)."},
+    {"lot": 2000, "use": "דרך מוצעת", "lot_size": 659, "units": 0, "floors_above": null, "floors_below": 3, "height_m": null, "coverage_pct": null, "main_above": null, "service_above": null, "service_below": 1900, "commercial_main": null, "ref": "טבלה 5, תא שטח 2000 (חניון)", "notes": "חניון מתחת לדרך מקומה -2 (הערה 8)."},
+    {"lot": 2001, "use": "דרך מוצעת", "lot_size": 547, "units": 0, "floors_above": null, "floors_below": 3, "height_m": null, "coverage_pct": null, "main_above": null, "service_above": null, "service_below": 1510, "commercial_main": null, "ref": "טבלה 5, תא שטח 2001 (חניון)", "notes": "חניון מתחת לדרך מקומה -2 (הערה 8)."},
+    {"lot": 2002, "use": "דרך מוצעת", "lot_size": 2118, "units": 0, "floors_above": null, "floors_below": 3, "height_m": null, "coverage_pct": null, "main_above": null, "service_above": null, "service_below": 530, "commercial_main": null, "ref": "טבלה 5, תא שטח 2002 (חניון)", "notes": "חניון מתחת לדרך מקומה -2 (הערה 8)."},
+    {"lot": 62, "use": "שטחים פתוחים ומבנים ומוסדות ציבור", "lot_size": null, "units": 0, "floors_above": null, "floors_below": null, "height_m": null, "coverage_pct": null, "main_above": null, "service_above": null, "service_below": null, "commercial_main": null, "ref": "טבלה 3.1 (לא מופיע בטבלה 5)", "notes": "אין זכויות בטבלה 5. שטח הייעוד בטבלה 3.2: 415.19 מ\"ר."},
+    {"lot": 780, "use": "ככר עירונית", "lot_size": null, "units": 0, "floors_above": null, "floors_below": null, "height_m": null, "coverage_pct": null, "main_above": null, "service_above": null, "service_below": null, "commercial_main": null, "ref": "טבלה 3.1 (לא מופיע בטבלה 5)", "notes": "אין זכויות בטבלה 5. שטח הייעוד בטבלה 3.2: 256.28 מ\"ר."}
+  ]
+}

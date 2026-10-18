@@ -540,7 +540,10 @@ def main():
             or crop_text(pdf_path, page_no, o['x1'] + 2, o['top'] - 1, min(page.width, o['x1'] + 260), o['bottom'] + 1)
         if txt:
             names = legend.setdefault(hexc(col), [])
-            u = norm_use(txt.splitlines()[0])
+            # first line with a letter: some Aspose sheets put a stray '#' glyph on the swatch row
+            # (tamal-2023 sheet 2), which would otherwise become the use name
+            u = norm_use(next((ln for ln in txt.splitlines() if re.search(r'[^\W\d_]', ln)),
+                              txt.splitlines()[0]))
             if u not in names:
                 names.append(u)
     if outline:  # snap each sampled colour to the nearest legend swatch
