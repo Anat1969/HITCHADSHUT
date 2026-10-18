@@ -74,8 +74,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .input, .select, .textarea {
   width: 100%; min-height: 44px; padding: 10px 14px;
   border: 1px solid var(--line-2); border-radius: var(--radius-sm);
-  background: #fff; transition: border-color .15s, box-shadow .15s;
+  background: #fff; color: #111111; transition: border-color .15s, box-shadow .15s;
 }
+/* The fields sit on dark panels too (the plan page's questions frame): never inherit a light text colour. */
+.input::placeholder, .textarea::placeholder { color: #767674; }
 .textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
 .input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--sea); box-shadow: 0 0 0 3px var(--sea-soft); }
 .input[dir='ltr'] { text-align: left; }
