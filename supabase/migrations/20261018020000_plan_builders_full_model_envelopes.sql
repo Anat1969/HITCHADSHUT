@@ -56,9 +56,10 @@ begin
   ), lots0 as (
     select t5.*, geo.g, ST_Area(geo.g) geo_area,
            coalesce(t5.height_m, t5.floors_above * 3.3) top,
-           coalesce(ST_Intersection(e.g, geo.g), geo.g) env,
+           -- traced lines come out of a buffer with many vertices: simplify to 20 cm
+           coalesce(ST_SimplifyPreserveTopology(ST_Intersection(e.g, geo.g), 0.2), geo.g) env,
            e.g is not null has_lines,
-           ST_Intersection(tl.g, geo.g) tline
+           ST_SimplifyPreserveTopology(ST_Intersection(tl.g, geo.g), 0.2) tline
     from t5 join geo using (lot)
     left join lines e on e.lot = t5.lot and e.kind = 'envelope'
     left join lines tl on tl.lot = t5.lot and tl.kind = 'tower'
@@ -149,6 +150,8 @@ begin
         'lots', coalesce(p_source, 'מגרשים וקווי בניין: תשריט מצב מוצע של התוכנית, מעוגן לרשת ITM'),
         'rights', 'זכויות: הוראות התוכנית, טבלה 5'),
     'ui', (v_model->'ui') || jsonb_build_object(
+        'summary_label', concat_ws(' · ', (select title from plan_projects where plan_number = p_plan_number),
+          to_char(coalesce((p_t5->>'total_units')::int, (select sum(units) from t5)), 'FM9,999') || ' דירות לפי טבלה 5'),
         'hint', 'המגרשים וקווי הבניין מהתשריט, הקומות והגובה מטבלה 5. הבניין עצמו הוא הערכה. לחיצה על מגרש מציגה את הזכויות שלו.',
         'modes', jsonb_build_object(
           'allowed', 'המעטפת השקופה היא השטח שבין קווי הבניין, עד הגובה המרבי בטבלה 5.',
