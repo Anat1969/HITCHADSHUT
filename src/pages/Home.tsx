@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import MapView, { type MapFocus } from '../components/MapView'
 import ProjectDetail, { coverOf } from '../components/ProjectDetail'
+import TopBar from '../components/TopBar'
 import type { Feedback, LonLat, ProjectKind, ProjectStatus, ProjectWithMedia, Quarter } from '../lib/types'
 import { BLUE_LINE, KIND_LABEL, STATUS_COLOR, STATUS_LABEL, STATUS_ORDER } from '../lib/labels'
 import { fetchLatestAnswered, fetchPublishedProjects, fetchQuarters, geocodeAshdod, planPath, type GeocodeResult } from '../lib/data'
@@ -178,6 +179,7 @@ export default function Home() {
   if (selected)
     return (
       <div className="fp fp-article">
+        <TopBar context={selected.plan_number ? `תוכנית ${selected.plan_number}` : selected.title} />
         <div className="fp-wrap fp-narrow" ref={scrollRef}>
           <ProjectDetail project={selected} quarters={quarters} me={me} onBack={back} />
         </div>
@@ -186,14 +188,8 @@ export default function Home() {
 
   return (
     <div className="fp">
+      <TopBar context={`${today}${projects && projects.length > 0 ? ` · ${projects.length} פרויקטים` : ''}`} />
       <div className="fp-wrap">
-        <header className="fp-top">
-          <span>אשדוד · מה נבנה סביבי</span>
-          <span>
-            {today}
-            {projects && projects.length > 0 ? ` · ${projects.length} פרויקטים` : ''}
-          </span>
-        </header>
 
         <section className="fp-head">
           <h1>
@@ -325,6 +321,7 @@ export default function Home() {
                               {d != null ? ` · ${formatDistance(d)}` : ''}
                             </small>
                             {p.title}
+                            {p.plan_number && <span className="pn">תוכנית {p.plan_number}</span>}
                             {p.units_existing != null && p.units_planned != null && (
                               <small>
                                 {p.units_existing.toLocaleString('he-IL')} דירות היום · {p.units_planned.toLocaleString('he-IL')} בתוכנית
