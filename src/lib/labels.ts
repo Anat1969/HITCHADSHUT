@@ -60,3 +60,13 @@ export const FEEDBACK_PROMPT: Record<FeedbackKind, string> = {
 
 /** Plan boundaries ("the blue line") are drawn in blue on every map, as on plan drawings. */
 export const BLUE_LINE = '#1D4ED8'
+
+/** Land-use colours in the 3D model, close to the planning-portal palette. The key is massing/parcels `cat`. */
+export const LAND_USE: Record<string, { label: string; color: string }> = {
+  residential: { label: 'מגורים', color: '#E2AE48' },
+  commerce: { label: 'מסחר', color: '#B85C98' },
+  employment: { label: 'תעסוקה', color: '#7A63B4' },
+  public: { label: 'מבני ציבור', color: '#9A6A4C' },
+  open: { label: 'שטח פתוח', color: '#6EA65F' },
+  road: { label: 'דרכים, שבילים וחניה', color: '#A8A8A6' },
+}
