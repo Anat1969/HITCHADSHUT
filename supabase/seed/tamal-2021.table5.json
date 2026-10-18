@@ -2,7 +2,8 @@
  "plan_number": "תמל/2021",
  "source": "הוראות התכנית, טבלה 5",
  "source_file_id": "1yzW49au98ycwVTRzi6-SuCmwB7Kk5aEO",
- "tashrit_file_id": null,
+ "tashrit_file_id": "1yNv8QaPBj1uXFPnSqgdUBdgtJQBP3Jka",
+ "tashrit_enlargement_file_id": "1-cOK5gXrxYKsRsuxY7tCxHA3qrrGDZVi",
  "total_units": 1436,
  "plan_total_units_section2": 1436,
  "notes": [
@@ -622,7 +623,7 @@
    "density_per_dunam": null,
    "commercial_main": 100,
    "maintenance_building_main": 50,
-   "ref": "טבלה 5, תא שטח 406, עמ' 22-22: שורת מסחר (100 מ\"ר) ושורת מבני תפעול תחזוקה ובקרה (50 מ\"ר, בלי גודל מגרש)"
+   "ref": "טבלה 5, תא שטח 406, עמ' 22: שורת מסחר (100 מ\"ר) ושורת מבני תפעול תחזוקה ובקרה (50 מ\"ר, בלי גודל מגרש)"
   }
  ]
 }
