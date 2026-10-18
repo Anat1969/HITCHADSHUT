@@ -45,7 +45,7 @@ begin
            (r->>'floors_above')::int floors_above, (r->>'floors_below')::int floors_below, (r->>'height_m')::numeric height_m,
            (r->>'coverage_pct')::numeric coverage_pct, (r->>'main_above')::numeric main_above,
            (r->>'service_above')::numeric service_above, (r->>'service_below')::numeric service_below,
-           (r->>'commercial_main')::numeric commercial_main, (r->>'podium_floors')::int podium_floors, (r->>'max_floor_m2')::numeric max_floor_m2, r->>'ref' ref
+           (r->>'commercial_main')::numeric commercial_main, (r->>'podium_floors')::int podium_floors, (r->>'total_area')::numeric total_area, (r->>'max_floor_m2')::numeric max_floor_m2, r->>'ref' ref
     from jsonb_array_elements(p_t5->'lots') r
     where r->>'lot' ~ '^\d+$'
   ), lines as (
@@ -84,8 +84,12 @@ begin
            -- typical floor: built area above ground spread over the floors, never over the coverage or the envelope
            least(
              -- with a podium, the podium floors take their share first and the tower gets the rest
-             coalesce((coalesce(main_above, 0) + coalesce(service_above, 0)
+             -- tables that give only a total above-ground area (no main/service split) use the total
+             coalesce((nullif(coalesce(main_above, 0) + coalesce(service_above, 0), 0)
                        - case when tline is not null and podium_floors > 0
+                              then podium_floors * least(geo_area * coalesce(coverage_pct, 100) / 100, ST_Area(env)) else 0 end)
+                      / nullif(floors_above - case when tline is not null and podium_floors > 0 then podium_floors else 0 end, 0),
+                      (total_area - case when tline is not null and podium_floors > 0
                               then podium_floors * least(geo_area * coalesce(coverage_pct, 100) / 100, ST_Area(env)) else 0 end)
                       / nullif(floors_above - case when tline is not null and podium_floors > 0 then podium_floors else 0 end, 0),
                       geo_area * coalesce(coverage_pct, 60) / 100),
