@@ -231,7 +231,7 @@ export default function PlanStory() {
     model?.ui?.modes?.[mode] ??
     (hasMassing || !model
       ? modeInfo.note
-      : 'היום: גבול המתחם בקו מקווקו והבניינים הקיימים סביבו. המותר והנפח החדש יוצגו כשיעלו טבלה 5 וקובץ KML של התוכנית.')
+      : 'היום: גבול המתחם בקו מקווקו והבניינים הקיימים סביבו. המותר והנפח החדש יוצגו כשיעלו הוראות התוכנית ותשריט מצב מוצע.')
   const lotChecks = model?.checks ?? []
 
   async function setPublished(v: boolean) {

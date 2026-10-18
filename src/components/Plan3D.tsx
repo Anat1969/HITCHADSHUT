@@ -82,13 +82,21 @@ export default function Plan3D({ model, mode, selectedLot, onSelectLot }: Props)
         source: 'boundary',
         paint: { 'line-color': '#111111', 'line-width': 1.4, 'line-dasharray': [3, 2] },
       })
-      if (model.parcels)
+      if (model.parcels) {
+        // Near-transparent fill so a lot can be picked even when the model has no volumes.
+        map.addLayer({
+          id: 'parcels-fill',
+          type: 'fill',
+          source: 'parcels',
+          paint: { 'fill-color': '#141414', 'fill-opacity': 0.01 },
+        })
         map.addLayer({
           id: 'parcels',
           type: 'line',
           source: 'parcels',
           paint: { 'line-color': '#8A8A88', 'line-width': 0.8 },
         })
+      }
       if (model.demolish)
         map.addLayer({
           id: 'demolish',
@@ -140,7 +148,7 @@ export default function Plan3D({ model, mode, selectedLot, onSelectLot }: Props)
       }
       // Opaque towers are drawn first, then the translucent envelope over them,
       // otherwise the envelope's depth hides the towers inside it.
-      for (const id of ['tower', 'envelope']) {
+      for (const id of ['tower', 'envelope', ...(model.parcels ? ['parcels-fill'] : [])]) {
         map.on('click', id, pick)
         map.on('mouseenter', id, () => (map.getCanvas().style.cursor = 'pointer'))
         map.on('mouseleave', id, () => (map.getCanvas().style.cursor = ''))
@@ -197,6 +205,7 @@ export default function Plan3D({ model, mode, selectedLot, onSelectLot }: Props)
       ['interpolate', ['linear'], ['get', 'top'], 45, '#C4C4C2', 100, '#8E8E8C'],
     ])
     map.setPaintProperty('envelope', 'fill-extrusion-color', ['case', ['==', ['get', 'lot'], sel], '#DCDCDA', '#FFFFFF'])
+    if (map.getLayer('parcels-fill')) map.setPaintProperty('parcels-fill', 'fill-opacity', ['case', ['==', ['get', 'lot'], sel], 0.22, 0.01])
     if (selectedLot != null) {
       const lot = model.lots.find((l) => l.lot === selectedLot)
       if (lot) map.easeTo({ center: lot.center, zoom: Math.max(map.getZoom(), 16.4), duration: 900 })
