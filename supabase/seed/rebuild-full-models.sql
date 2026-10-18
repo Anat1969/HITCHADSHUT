@@ -10,17 +10,19 @@ declare
   env jsonb;
 begin
   for r in select * from (values
-    ('תמל/2021', 'tamal-2021', true), ('תמל/2023', 'tamal-2023', true), ('תמל/2024', 'tamal-2024', true),
-    ('תמל/2047', 'tamal-2047', true), ('603-0704064', '603-0704064', true), ('603-0391219', '603-0391219', true),
-    ('603-0346031', '603-0346031', true), ('603-1259092', '603-1259092', true), ('603-0993790', '603-0993790', true),
-    ('603-1097815', '603-1097815', true), ('603-0780734', '603-0780734', true), ('603-1510577', '603-1510577', true),
-    ('3/03/104/66', '3-03-104-66', true), ('603-0271296', '603-0271296', false)
-  ) v(plan, slug, has_env) loop
+    ('תמל/2021', 'tamal-2021', true, null), ('תמל/2023', 'tamal-2023', true, null), ('תמל/2024', 'tamal-2024', true, null),
+    ('תמל/2047', 'tamal-2047', true, null), ('603-0704064', '603-0704064', true, null), ('603-0391219', '603-0391219', true, null),
+    ('603-0346031', '603-0346031', true, null), ('603-1259092', '603-1259092', true, null), ('603-0993790', '603-0993790', true, null),
+    ('603-1097815', '603-1097815', true, null), ('603-0780734', '603-0780734', true, null),
+    ('603-1510577', '603-1510577', true, 'מגרשים וקווי בניין: נספח הבינוי (טיוטה), מעוגן לחלקות הרשומות (הערכה)'),
+    ('3/03/104/66', '3-03-104-66', true, 'מגרשים וקו בניין: התשריט הסרוק, מעוגן לחלקה הרשומה (הערכה)'),
+    ('603-0271296', '603-0271296', false, 'מגרשים: התשריט הסרוק, מעוגן לרשת ITM (הערכה)')
+  ) v(plan, slug, has_env, src) loop
     base := 'https://raw.githubusercontent.com/Anat1969/HITCHADSHUT/' || v_sha || '/supabase/seed/' || r.slug;
     env := case when r.has_env then (extensions.http_get(base || '.envelopes.geojson')).content::jsonb end;
     perform plan_builders.full_model(r.plan,
       (extensions.http_get(base || '.lots.geojson')).content::jsonb,
       (extensions.http_get(base || '.table5.json')).content::jsonb,
-      null, env);
+      r.src, env);
   end loop;
 end $$;
