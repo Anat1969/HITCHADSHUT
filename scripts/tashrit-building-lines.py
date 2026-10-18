@@ -1,11 +1,23 @@
 """Trace building lines (קווי בניין) on a vector "תשריט מצב מוצע" PDF into per-lot envelopes.
 
 Usage:
-  python3 -I scripts/tashrit-building-lines.py <tashrit.pdf> <lots.geojson> <out.geojson> [--page N] [--table5 t5.json] [--debug faces.geojson]
+  python3 -I scripts/tashrit-building-lines.py <tashrit.pdf> <lots.geojson> <out.geojson> [--page N] [--table5 t5.json]
+         [--debug faces.geojson] [--snap M] [--only 201-215,304] [--append earlier.geojson]
 
-  <lots.geojson> is the output of scripts/tashrit-lots.py for the same drawing.
+  <lots.geojson> is the output of scripts/tashrit-lots.py for the plan (any drawing of it: the lots are
+  in ITM/WGS84, so an enlargement sheet of the same plan works with the main sheet's lots).
   Output: GeoJSON EPSG:4326, one feature per face, properties {lot, kind: 'envelope'|'tower', area_m2}.
   A lot with no building lines gets no feature (the model then uses the whole lot).
+  --snap: SNAP in metres (default 0.3, for 1:500; 0.6 on a 1:1000 sheet, where dash gaps are twice as long).
+  --only: lot numbers/ranges to process. --append: keep the lots of an earlier run (another sheet)
+  that this run does not produce; features then carry 'drawing', and properties.runs lists the runs.
+
+Runs (validated: re-run and diff against the committed supabase/seed/*.envelopes.geojson):
+  603-0704064, 603-0391219: --table5 <plan>.table5.json.
+  tamal-2024 (תשריט.pdf, 1:500): --table5 tamal-2024.table5.json.
+  tamal-2021: two sheets, public lots from the 1:1000 sheet, the residential part from the 1:500 enlargement:
+    A = <1:1000 sheet> ... --table5 tamal-2021.table5.json --snap 0.6 --only 301-316
+    <1:500 enlargement> ... --table5 tamal-2021.table5.json --only 201-215,304 --append A
 
 How it works:
   - Page loading, the ITM grid fit and ITM->WGS84 come from scripts/tashrit-lots.py (importlib).
@@ -41,6 +53,9 @@ Limits:
     the envelope then merges with its setback strip and is dropped (check the overlay). Same
     when the only other lines are underground ones (603-0391219 lot 2): the lot gets nothing.
   - Balcony lines (קו בניין 0 למרפסות) and underground lines are ignored.
+  - The split rule also fires on 10-floor lots whose "עילי" line sets back the upper floors
+    (tamal-2021 lots 203, 207): the "tower" there is the upper-floor footprint, not a high-rise.
+  - No tower line and a single face (tamal-2024 lots 1-4, tamal-2021 lot 202): no tower feature.
 """
 import importlib.util, json, math, os, re, sys
 
@@ -72,8 +87,19 @@ def classify(text):
 
 
 def main():
+    global SNAP
     args = sys.argv[1:]
-    page_no, dbg = 1, None
+    page_no, dbg, only, prev = 1, None, None, None
+    if '--append' in args:
+        i = args.index('--append'); prev = json.load(open(args[i + 1])); del args[i:i + 2]
+    if '--snap' in args:
+        i = args.index('--snap'); SNAP = float(args[i + 1]); del args[i:i + 2]
+    if '--only' in args:
+        i = args.index('--only'); only = set()
+        for part in args[i + 1].split(','):
+            lo, _, hi = part.partition('-')
+            only.update(range(int(lo), int(hi or lo) + 1))
+        del args[i:i + 2]
     if '--page' in args:
         i = args.index('--page'); page_no = int(args[i + 1]); del args[i:i + 2]
     t5 = None
@@ -209,6 +235,8 @@ def main():
     tlines = [l for i in tstyles for l in segs[i]]
     t5lots = {l['lot']: l for l in (t5 or {}).get('lots', [])}
     for lot, lp in sorted(lots, key=lambda t: t[0]):
+        if only is not None and lot not in only:
+            continue
         row = t5lots.get(lot)
         if t5 and not (row and (row.get('floors_above') or row.get('main_above'))):
             continue  # nothing built above ground in this lot (open space, road, parking below)
@@ -250,6 +278,17 @@ def main():
               properties=dict(source='תשריט מצב מוצע, קווי בניין', crs_note=f'EPSG:4326 from ITM grid fit ({how})',
                               snap_m=SNAP, legend=[dict(name=s['name'], kind=s['kind'], colours=sorted(s['cols'])) for s in styles]),
               features=feats)
+    if prev:  # earlier run on another drawing: keep its lots that this run did not produce
+        done = {ft['properties']['lot'] for ft in feats}
+        kept = [ft for ft in prev['features'] if ft['properties']['lot'] not in done]
+        for ft in kept:
+            ft['properties'].setdefault('drawing', prev.get('name'))
+        for ft in feats:
+            ft['properties']['drawing'] = fc['name']
+        fc['features'] = sorted(kept + feats, key=lambda ft: ft['properties']['lot'])
+        fc['properties']['runs'] = (prev['properties'].get('runs') or [dict(drawing=prev.get('name'), snap_m=prev['properties'].get('snap_m'),
+                                                                            legend=prev['properties'].get('legend'))]) \
+            + [dict(drawing=fc['name'], snap_m=SNAP, legend=fc['properties']['legend'])]
     json.dump(fc, open(out_path, 'w'), ensure_ascii=False, indent=1)
     if dbg:
         json.dump(dict(type='FeatureCollection', features=dfeats), open(dbg, 'w'), ensure_ascii=False)
