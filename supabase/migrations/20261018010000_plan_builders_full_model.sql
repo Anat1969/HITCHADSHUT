@@ -79,7 +79,7 @@ begin
     select jsonb_build_object('type', 'Feature',
              'properties', jsonb_build_object('lot', lot, 'kind', 'tower', 'base', 0, 'top', top),
              'geometry', ST_AsGeoJSON(ST_ReducePrecision(ST_Transform(
-               plan_builders.inset_to_area(g, geo_area * coalesce(coverage_pct, 60) / 100), 4326), 0.000001))::jsonb)
+               plan_builders.inset_to_area(g, (geo_area * coalesce(coverage_pct, 60) / 100)::numeric), 4326), 0.000001))::jsonb)
     from lots where top > 0
   ), demolish as (
     select b.g, b.h from plan_builders.city_buildings(v_blue) b
