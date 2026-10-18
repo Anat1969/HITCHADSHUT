@@ -6,6 +6,7 @@ import ProjectEditor from './ProjectEditor'
 import BulkImport from './BulkImport'
 import Moderation from './Moderation'
 import { ToastProvider } from './toast'
+import TopBar from '../components/TopBar'
 
 export const ADMIN_FLAG = 'mnv-admin'
 
@@ -36,6 +37,7 @@ export default function AdminApp() {
   return (
     <ToastProvider>
       <div className="admin">
+        <TopBar context="ניהול" />
         <header className="admin-top">
           <div className="admin-top-inner">
             <h1>מה נבנה סביבי · ניהול</h1>

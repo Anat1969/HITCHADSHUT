@@ -6,6 +6,7 @@ import type { ChapterLayout, Media, PlanModel, ProjectWithMedia, StoryChapter, S
 import Plan3D, { type ViewMode } from '../components/Plan3D'
 import UnitsCompare from '../components/UnitsCompare'
 import FeedbackSection from '../components/FeedbackSection'
+import TopBar from '../components/TopBar'
 import { embedUrl, mediaSrc } from '../lib/media'
 import { planNumberCandidates } from '../lib/data'
 
@@ -249,10 +250,8 @@ export default function PlanStory() {
   if (!project || !story)
     return (
       <div className="mag">
+        <TopBar context={`תוכנית ${planNumber}`} />
         <div className="mag-wrap">
-          <div className="mag-top">
-            <Link to="/">מה נבנה סביבי · אשדוד</Link>
-          </div>
           <div className="mag-hero">
             <h1>התוכנית עוד לא פורסמה</h1>
             <p className="mag-deck">העמוד של תוכנית {planNumber} נמצא בהכנה אצל צוות העירייה.</p>
@@ -273,11 +272,8 @@ export default function PlanStory() {
   let n = 0
   return (
     <div className="mag" dir="rtl">
+      <TopBar context={`תוכנית ${story.plan_number}`} />
       <div className="mag-wrap">
-        <header className="mag-top">
-          <Link to="/">מה נבנה סביבי · אשדוד</Link>
-          <span>תוכנית {story.plan_number}</span>
-        </header>
 
         {!project.published && isStaff && (
           <div className="mag-draft" role="status">
