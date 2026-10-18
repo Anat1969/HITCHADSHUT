@@ -4,7 +4,7 @@ drop function if exists plan_builders.full_model(text, jsonb, jsonb, text);
 
 -- p_lots: GeoJSON FeatureCollection (EPSG:4326), each feature with properties.lot.
 -- p_t5:   {"total_units": n, "lots": [{"lot", "use", "lot_size", "units", "floors_above", "floors_below", "height_m",
---          "coverage_pct", "main_above", "service_above", "service_below", "commercial_main", "podium_floors", "ref"}]}
+--          "coverage_pct", "main_above", "service_above", "service_below", "commercial_main", "podium_floors", "max_floor_m2", "ref"}]}
 -- p_envelopes: optional FeatureCollection (EPSG:4326) of building-line polygons traced from the drawing,
 --   properties.lot and properties.kind = 'envelope' (קו בניין) or 'tower' (קו בניין לבניין גבוה / למגדל).
 -- Massing per lot:
@@ -44,7 +44,7 @@ begin
            (r->>'floors_above')::int floors_above, (r->>'floors_below')::int floors_below, (r->>'height_m')::numeric height_m,
            (r->>'coverage_pct')::numeric coverage_pct, (r->>'main_above')::numeric main_above,
            (r->>'service_above')::numeric service_above, (r->>'service_below')::numeric service_below,
-           (r->>'commercial_main')::numeric commercial_main, (r->>'podium_floors')::int podium_floors, r->>'ref' ref
+           (r->>'commercial_main')::numeric commercial_main, (r->>'podium_floors')::int podium_floors, (r->>'max_floor_m2')::numeric max_floor_m2, r->>'ref' ref
     from jsonb_array_elements(p_t5->'lots') r
     where r->>'lot' ~ '^\d+$'
   ), lines as (
@@ -68,6 +68,7 @@ begin
            least(
              coalesce((coalesce(main_above, 0) + coalesce(service_above, 0)) / nullif(floors_above, 0), geo_area * coalesce(coverage_pct, 60) / 100),
              geo_area * coalesce(coverage_pct, 100) / 100,
+             coalesce(max_floor_m2, 'Infinity'::numeric),
              ST_Area(coalesce(tline, env)) * 0.98)::numeric plate
     from lots0 l
   ), massing as (
