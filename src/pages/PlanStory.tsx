@@ -9,6 +9,7 @@ import FeedbackSection from '../components/FeedbackSection'
 import TopBar from '../components/TopBar'
 import { embedUrl, mediaSrc } from '../lib/media'
 import { planNumberCandidates } from '../lib/data'
+import { LAND_USE } from '../lib/labels'
 
 const MODES: { id: ViewMode; label: string; note: string }[] = [
   { id: 'today', label: 'היום', note: 'המבנים הקיימים סביב, וגבולות התוכנית בקו מקווקו. רוב המגרשים עוד לא בנויים.' },
@@ -227,6 +228,15 @@ export default function PlanStory() {
   const modeInfo = MODES.find((m) => m.id === mode)!
   // Without lots and envelopes (KML 3D or table 5 + SHP) the model shows today only.
   const hasMassing = !!model?.massing?.features?.length
+  // Land uses present in the model, in the palette's order, for the colour legend.
+  const landUses = useMemo(() => {
+    const cats = new Set<string>()
+    for (const f of [...(model?.massing?.features ?? []), ...(model?.parcels?.features ?? [])]) {
+      const c = (f.properties as { cat?: string } | null)?.cat
+      if (c) cats.add(c)
+    }
+    return Object.keys(LAND_USE).filter((k) => cats.has(k))
+  }, [model])
   const modes = hasMassing ? MODES : MODES.filter((m) => m.id === 'today')
   const modeNote =
     model?.ui?.modes?.[mode] ??
@@ -380,12 +390,20 @@ export default function PlanStory() {
                     <i style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid #8A8A88' }} />
                     מותר
                   </span>
-                  <span>
-                    <i style={{ background: 'linear-gradient(180deg,#C4C4C2,#8E8E8C)' }} />
-                    נפח לדוגמה
-                  </span>
+                  {landUses.length === 0 && (
+                    <span>
+                      <i style={{ background: 'linear-gradient(180deg,#C4C4C2,#8E8E8C)' }} />
+                      נפח לדוגמה
+                    </span>
+                  )}
                 </>
               )}
+              {landUses.map((k) => (
+                <span key={k}>
+                  <i style={{ background: LAND_USE[k].color }} />
+                  {LAND_USE[k].label}
+                </span>
+              ))}
             </div>
           </div>
           {model && (
