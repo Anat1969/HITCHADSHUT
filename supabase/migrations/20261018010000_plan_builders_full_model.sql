@@ -86,8 +86,8 @@ begin
     where ST_Within(ST_PointOnSurface(b.g), v_blue)
   ), checks as (
     select jsonb_build_object('lot', 0, 'level', 'warn', 'text',
-             format('סכום הדירות בטבלה 5 (%s) שונה מסך הדירות בתוכנית (%s).', s.u, p.units_planned)) c
-    from (select sum(units) u from t5) s, plan_projects p
+             format('סך הדירות בטבלה 5 (%s) שונה מסך הדירות בתוכנית (%s).', s.u, p.units_planned)) c
+    from (select coalesce((p_t5->>'total_units')::int, sum(units)) u from t5) s, plan_projects p
     where p.plan_number = p_plan_number and p.units_planned is not null and s.u <> p.units_planned
     union all
     select jsonb_build_object('lot', lot, 'level', 'warn', 'text',
@@ -127,7 +127,7 @@ begin
     'checks', coalesce((select jsonb_agg(c) from checks), '[]'::jsonb),
     'summary', (v_model->'summary') || jsonb_build_object(
         'lots', (select count(*) from lots),
-        'units_after', (select coalesce(sum(units), 0) from t5),
+        'units_after', coalesce((p_t5->>'total_units')::int, (select coalesce(sum(units), 0) from t5)),
         'floors_max', (select max(floors_above) from t5),
         'height_max', (select max(height_m) from t5)),
     'sources', (v_model->'sources') || jsonb_build_object(
