@@ -2,6 +2,12 @@
 
 Usage:
   python3 -I scripts/tashrit-lots.py <tashrit.pdf> <out.geojson> [--page N] [--table5 t5.json]
+         [--grid 'x:166700@255.1,...'] [--lot-line '#003fff' --polygonize]
+
+Runs (validated: re-run and diff against the committed supabase/seed/*.lots.geojson):
+  603-0704064, 603-0391219: defaults.
+  tamal-2021 (תשריט 2.pdf, 1:1000): defaults.
+  tamal-2024 (תשריט.pdf, 1:500): --lot-line '#003fff' --polygonize.
 
 How it works:
   - Words come from poppler `pdftotext -bbox` (ESRI exports often hide their Arial text from
@@ -17,7 +23,18 @@ How it works:
     non-white pixel colour inside the lot on a pdftoppm rendering, matched to the nearest
     legend swatch.
   - Lot numbers = integer words inside a small blue stroked box (the "תא שטח ומספרו" symbol);
-    the word's box must sit inside the symbol (pdftotext gives rotated words huge boxes).
+    the word's box must sit inside the symbol (pdftotext gives rotated words huge boxes). All lot
+    numbers share one text height; a word of another height in a box (an old parcel number, a
+    spot height, a digit of a small symbol) is skipped, and the box is dropped if nothing is left.
+  - --polygonize (outline mode, with --lot-line naming the lot-line colour): for drawings where
+    the lots are one shared line network rather than closed rings per lot (tamal-2024). Every
+    segment of that colour is noded and the faces become the lot candidates; faces without a label
+    are dropped. Without --lot-line, outline mode picks the colour whose closed rings hold the
+    most labels, which can be the cadastre (existing parcels) instead of the proposed lots.
+  - --grid: georeferencing fallback for drawings whose grid labels are not text (e.g. an
+    encoded font): give the label values read off a pdftoppm rendering of the frame, at the PDF
+    position of their vector tick marks. Not needed so far: on every drawing processed, the labels
+    came out of pdftotext even when pdfplumber saw only ESRI marker fonts.
     A box that falls in no lot ring goes to the nearest unlabelled ring.
   - ITM->WGS84 with pyproj when installed, else a built-in TM inverse + Helmert (same EPSG
     parameters; checked against pyproj to a few cm).
@@ -84,9 +101,29 @@ def lstsq(rows, vals):
     return coef, rank
 
 
-def fit_grid(words):
+def parse_grid(spec):
+    """--grid 'x:166700@255.1/18,y:633100@612.2/18': ITM grid values with the PDF position of their
+    tick, for drawings whose labels are not readable as text (read them off a pdftoppm rendering of
+    the frame, and take the tick positions from the vector tick marks). The first number is the PDF
+    coordinate along the label's axis (x for an X label, y for a Y label); the optional second one is
+    the other coordinate (the label row / column), which also bounds the map frame."""
     xs, ys = [], []
-    for w in words:
+    for item in filter(None, re.split(r'[,\s]+', spec)):
+        m = re.fullmatch(r'([xyXY]):(\d{6})@([\d.]+)(?:/([\d.]+))?', item)
+        if not m:
+            sys.exit(f'bad --grid entry {item!r}')
+        axis, v, a, b = m.group(1).lower(), int(m.group(2)), float(m.group(3)), m.group(4)
+        if axis == 'x':
+            xs.append((a, float(b) if b else 0.0, v))
+        else:
+            ys.append((float(b) if b else 0.0, a, v))
+    return xs, ys
+
+
+def fit_grid(words, manual=None):
+    xs, ys = manual or ([], [])
+    xs, ys = list(xs), list(ys)
+    for w in words if not manual else []:
         if not re.fullmatch(r'\d{6}', w['text']):
             continue
         v = int(w['text'])
@@ -199,6 +236,29 @@ def rings_of(obj):
     return [[tuple(p) for p in r] for r in rings]
 
 
+def polylines(obj):
+    """Every subpath as an open polyline (Bezier segments reduced to their end points)."""
+    out, cur = [], []
+    for seg in obj.get('path') or []:
+        op = seg[0]
+        if op == 'm':
+            if len(cur) >= 2:
+                out.append(cur)
+            cur = [tuple(seg[1])]
+        elif op in ('l', 'c', 'v', 'y'):
+            cur.append(tuple(seg[-1]))
+        elif op == 'h' and cur:
+            cur.append(cur[0])
+    if len(cur) >= 2:
+        out.append(cur)
+    if not out and obj.get('pts') and len(obj['pts']) >= 2:
+        out = [[tuple(p) for p in obj['pts']]]
+    if not obj.get('path') and obj.get('object_type') == 'rect':
+        out = [[(obj['x0'], obj['top']), (obj['x1'], obj['top']), (obj['x1'], obj['bottom']),
+                (obj['x0'], obj['bottom']), (obj['x0'], obj['top'])]]
+    return [[p for i, p in enumerate(l) if i == 0 or p != l[i - 1]] for l in out if len(set(l)) >= 2]
+
+
 def closed_rings(obj):
     """Subpaths that close (an 'h' or back on their start point), for stroked outlines."""
     rings, cur = [], []
@@ -301,18 +361,24 @@ def same(a, b, tol=0.02):
 
 def main():
     args = sys.argv[1:]
-    page_no, t5 = 1, None
+    page_no, t5, grid, lot_line, polygonize = 1, None, None, None, False
     if '--page' in args:
         i = args.index('--page'); page_no = int(args[i + 1]); del args[i:i + 2]
     if '--table5' in args:
         i = args.index('--table5'); t5 = json.load(open(args[i + 1])); del args[i:i + 2]
+    if '--lot-line' in args:
+        i = args.index('--lot-line'); lot_line = args[i + 1].lower(); del args[i:i + 2]
+    if '--polygonize' in args:
+        args.remove('--polygonize'); polygonize = True
+    if '--grid' in args:
+        i = args.index('--grid'); grid = parse_grid(args[i + 1]); del args[i:i + 2]
     pdf_path, out_path = args
     page = pdfplumber.open(pdf_path).pages[page_no - 1]
     words = words_pdftotext(pdf_path, page_no) or page.extract_words()
     log = lambda *a: print(*a, file=sys.stderr)
 
     # 1. georeference
-    g = fit_grid(words)
+    g = fit_grid(words, grid)
     (a, b, c), resx, ptsx = g['X']
     (d, e, f), resy, ptsy = g['Y']
     to_itm = lambda x, y: (a * x + b * y + c, d * x + e * y + f)
@@ -347,15 +413,27 @@ def main():
              and (lambda s: s and s[2] > 0.5 and s[2] > s[0] + 0.3 and s[2] > s[1] + 0.2)(rgb(o.get('stroking_color')))]
     nums = [dict(w, cx=(w['x0'] + w['x1']) / 2, cy=(w['top'] + w['bottom']) / 2) for w in words
             if re.fullmatch(r'\d{1,3}', w['text'])]
-    labels = []
+    labels, picks = [], []
     for bx in boxes:  # one number per box: the word that fills it, closest to its centre
         bw, bh = bx['x1'] - bx['x0'], bx['bottom'] - bx['top']
         bcx, bcy = (bx['x0'] + bx['x1']) / 2, (bx['top'] + bx['bottom']) / 2
         cand = [w for w in nums if bx['x0'] - 1 <= w['cx'] <= bx['x1'] + 1 and bx['top'] - 1 <= w['cy'] <= bx['bottom'] + 1
                 and w['x1'] - w['x0'] <= bw + 3 and w['bottom'] - w['top'] >= 0.8 * bh and in_frame(w['cx'], w['cy'])]
         if cand:
-            w = min(cand, key=lambda w: (-round(w['bottom'] - w['top']), math.hypot(w['cx'] - bcx, w['cy'] - bcy)))
-            labels.append((int(w['text']), w['cx'], w['cy']))
+            key = lambda w: (-round(w['bottom'] - w['top']), math.hypot(w['cx'] - bcx, w['cy'] - bcy))
+            picks.append((cand, key, min(cand, key=key)))
+    # all lot numbers share one font size: drop words of another size (parcel numbers, heights,
+    # stray digits in small symbols) and re-pick within the box
+    if picks:
+        import collections
+        H = collections.Counter(round(w['bottom'] - w['top'], 1) for *_, w in picks).most_common(1)[0][0]
+        for cand, key, w in picks:
+            ok = [c for c in cand if abs((c['bottom'] - c['top']) - H) <= 0.05 * H]
+            if ok:
+                w = min(ok, key=key)
+                labels.append((int(w['text']), w['cx'], w['cy']))
+            else:
+                log(f'box with "{w["text"]}" skipped: text height {w["bottom"] - w["top"]:.1f}, lot numbers are {H}')
 
     # 2b. outline mode: no coloured vector fills -> closed stroked rings of the lot-line colour
     outline = not polys
@@ -371,16 +449,38 @@ def main():
                 if in_frame(cx, cy) and area_pt * mpp * mpp > 5 and area_pt < (fx1 - fx0) * (fy1 - fy0) * 0.9:
                     groups.setdefault(hexc(col), []).append(dict(ring=r, color=None, area_pt=area_pt))
         score = {k: sum(any(inside((cx, cy), p['ring']) for p in v) for _, cx, cy in labels) for k, v in groups.items()}
-        if not score or max(score.values()) == 0:
+        if lot_line:
+            line_col = lot_line
+        elif not score or max(score.values()) == 0:
             sys.exit('no filled polygons and no closed outlines around lot labels')
-        line_col = max(score, key=score.get)
-        seen = set()
-        for p in groups[line_col]:
-            key = (round(p['area_pt']), tuple(round(v) for v in min(p['ring'])))
-            if key not in seen:  # outlines are often drawn twice
-                seen.add(key)
-                polys.append(p)
-        log(f'outline mode: lot line colour {line_col}, {len(polys)} closed rings')
+        else:
+            line_col = max(score, key=score.get)
+        if polygonize:  # lots drawn as a shared line network: node every segment and take the faces
+            from shapely.geometry import LineString
+            from shapely.ops import polygonize as faces, unary_union
+            segs = []
+            for o in page.curves + page.rects + page.lines:
+                col = rgb(o.get('stroking_color'))
+                if not o.get('stroke') or o.get('fill') or not col or hexc(col) != line_col:
+                    continue
+                for line in polylines(o):
+                    if any(in_frame(x, y) for x, y in line):
+                        segs.append(LineString(line))
+            for face in faces(unary_union(segs)):
+                r = list(face.exterior.coords)[:-1]
+                area_pt = abs(shoelace(r))
+                if area_pt * mpp * mpp > 5:
+                    polys.append(dict(ring=r, color=None, area_pt=area_pt))
+            log(f'outline mode: lot line colour {line_col}, {len(segs)} lines -> {len(polys)} faces')
+        else:
+            seen = set()
+            for p in groups.get(line_col, []):
+                key = (round(p['area_pt']), tuple(round(v) for v in min(p['ring'])))
+                if key not in seen:  # outlines are often drawn twice
+                    seen.add(key)
+                    polys.append(p)
+            log(f'outline mode: lot line colour {line_col}, {len(polys)} closed rings')
+
 
     for p in polys:
         p['lots'] = []
