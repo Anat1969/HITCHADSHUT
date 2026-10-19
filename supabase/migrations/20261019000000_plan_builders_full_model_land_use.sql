@@ -182,7 +182,9 @@ begin
         'rights', 'זכויות: הוראות התוכנית, טבלה 5'),
     'ui', (v_model->'ui') || jsonb_build_object(
         'summary_label', concat_ws(' · ', (select title from plan_projects where plan_number = p_plan_number),
-          to_char(coalesce((p_t5->>'total_units')::int, (select sum(units) from t5)), 'FM9,999') || ' דירות לפי טבלה 5'),
+          case when coalesce((p_t5->>'total_units')::int, (select sum(units) from t5), 0) > 0
+            then to_char(coalesce((p_t5->>'total_units')::int, (select sum(units) from t5)), 'FM9,999') || ' דירות לפי טבלה 5'
+            else 'עדיין בלי טבלה 5' end),
         'hint', 'המגרשים וקווי הבניין מהתשריט, הקומות והגובה מטבלה 5. הבניין עצמו הוא הערכה. לחיצה על מגרש מציגה את הזכויות שלו.',
         'modes', jsonb_build_object(
           'allowed', 'המעטפת השקופה היא השטח שבין קווי הבניין, עד הגובה המרבי בטבלה 5.',
