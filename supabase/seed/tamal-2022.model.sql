@@ -135,3 +135,24 @@ model as (
 insert into public.plan_models (plan_number, model, source, updated_at)
 select 'תמל/2022', m, 'supabase/seed/tamal-2022.model.sql', now() from model
 on conflict (plan_number) do update set model = excluded.model, source = excluded.source, updated_at = now();
+
+-- Land-use colours (19/10/2026): the KML model has no table-5 categories, so volumes and lot outlines get `cat`
+-- from their kind and the drawing's land use (yeud). Lots 101–107 are residential over commerce.
+update plan_models m set model = jsonb_set(jsonb_set(model,
+  '{massing,features}', (select jsonb_agg(jsonb_set(f, '{properties,cat}', to_jsonb(
+      case when f->'properties'->>'kind' = 'podium' then 'commerce'
+           when f->'properties'->>'kind' = 'tower' then 'residential'
+           else 'mixed' end))) from jsonb_array_elements(model->'massing'->'features') f)),
+  '{parcels,features}', (select jsonb_agg(case when c is null then f else jsonb_set(f, '{properties,cat}', to_jsonb(c)) end) from (
+      select f, case
+        when y ~ 'פתוח|שצ"פ|ככר|כיכר' then 'open'
+        when y ~ 'מגורים' and (f->'properties'->>'lot')::text in ('101','102','103','104','105','106','107') then 'mixed'
+        when y ~ 'מגורים' then 'residential'
+        when y ~ 'עירוני מעורב' then 'mixed'
+        when y ~ 'ציבור' then 'public'
+        when y ~ 'תעסוקה' and y !~ 'מסחר' then 'employment'
+        when y ~ 'מסחר|תעסוקה' then 'commerce'
+        when y ~ 'דרך|שביל|חני' then 'road'
+      end c
+      from jsonb_array_elements(model->'parcels'->'features') f, lateral (select coalesce(f->'properties'->>'yeud','') y) z) q))
+where plan_number = 'תמל/2022';
