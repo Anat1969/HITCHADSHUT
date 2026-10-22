@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { DEV_CHAT_URL, RESEARCH_URL } from '../lib/links'
+import { DEV_CHAT_URL, RESEARCH_URL, SHARE_TEXT } from '../lib/links'
 import '../styles/topbar.css'
 
 type InstallPrompt = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }
@@ -61,6 +61,17 @@ export default function TopBar({ context }: { context?: string }) {
     setTimeout(() => setCopied(false), 1800)
   }
 
+  // Phones: the system share sheet (WhatsApp and others). The preview image comes from the link itself.
+  const canShare =
+    typeof navigator !== 'undefined' && typeof navigator.share === 'function' && window.matchMedia('(pointer: coarse)').matches
+  const share = async () => {
+    try {
+      await navigator.share({ title: document.title, text: SHARE_TEXT, url: window.location.href })
+    } catch {
+      /* closed by the user */
+    }
+  }
+
   const install = async () => {
     if (!deferredInstall) return
     await deferredInstall.prompt()
@@ -88,6 +99,11 @@ export default function TopBar({ context }: { context?: string }) {
           <button type="button" className="tb-btn" onClick={copy}>
             {copied ? 'הקישור הועתק' : 'העתקת קישור'}
           </button>
+          {canShare && (
+            <button type="button" className="tb-btn" onClick={share}>
+              שיתוף
+            </button>
+          )}
           <div className="tb-menu" ref={menuRef}>
             <button type="button" className="tb-btn" aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen((v) => !v)}>
               מערכת
