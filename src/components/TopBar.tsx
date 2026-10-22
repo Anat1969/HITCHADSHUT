@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { DEV_CHAT_URL, RESEARCH_URL, SHARE_TEXT } from '../lib/links'
+import { DEV_CHAT_URL, RESEARCH_URL, SHARE_IMAGE, SHARE_TEXT, SHARE_VERSION } from '../lib/links'
 import '../styles/topbar.css'
 
 type InstallPrompt = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }
@@ -24,7 +24,7 @@ if (typeof window !== 'undefined') {
 export default function TopBar({ context }: { context?: string }) {
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [sent, setSent] = useState(false)
   const [canInstall, setCanInstall] = useState(!!deferredInstall)
   const menuRef = useRef<HTMLDivElement>(null)
   const isHome = pathname === '/'
@@ -51,25 +51,35 @@ export default function TopBar({ context }: { context?: string }) {
     }
   }, [open])
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href)
-    } catch {
-      window.prompt('העתקת קישור', window.location.href)
-    }
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1800)
-  }
+  // One button sends the app in one go: picture of the home page, one sentence, and the link.
+  // Phones: the system share sheet with the picture as a file and the sentence and link as its caption.
+  // Computers: WhatsApp (web or app) opens with the message ready; the picture comes from the link preview.
+  const shareFile = useRef<File | null>(null)
+  useEffect(() => {
+    fetch(SHARE_IMAGE)
+      .then((r) => (r.ok ? r.blob() : Promise.reject()))
+      .then((b) => (shareFile.current = new File([b], 'ma-nivne-svivi.png', { type: 'image/png' })))
+      .catch(() => {})
+  }, [])
 
-  // Phones: the system share sheet (WhatsApp and others). The preview image comes from the link itself.
-  const canShare =
-    typeof navigator !== 'undefined' && typeof navigator.share === 'function' && window.matchMedia('(pointer: coarse)').matches
   const share = async () => {
-    try {
-      await navigator.share({ title: document.title, text: SHARE_TEXT, url: window.location.href })
-    } catch {
-      /* closed by the user */
+    const url = new URL(window.location.href)
+    url.searchParams.set('s', SHARE_VERSION) // a new address, so WhatsApp builds a fresh preview
+    const text = `${SHARE_TEXT}\n${url.toString()}`
+    const file = shareFile.current
+    const phone = window.matchMedia('(pointer: coarse)').matches
+    if (phone && file && navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], text })
+      } catch {
+        /* closed by the user */
+      }
+      return
     }
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener')
+    navigator.clipboard?.writeText(text).catch(() => {})
+    setSent(true)
+    setTimeout(() => setSent(false), 2400)
   }
 
   const install = async () => {
@@ -96,14 +106,10 @@ export default function TopBar({ context }: { context?: string }) {
               דף הבית
             </Link>
           )}
-          <button type="button" className="tb-btn" onClick={copy}>
-            {copied ? 'הקישור הועתק' : 'העתקת קישור'}
+          <button type="button" className="tb-btn tb-share" onClick={share} aria-label="שיתוף האפליקציה: תמונה, משפט וקישור">
+            <img src={SHARE_IMAGE} alt="" width={56} height={29} />
+            <span>{sent ? 'ההודעה מוכנה בוואטסאפ' : 'שיתוף'}</span>
           </button>
-          {canShare && (
-            <button type="button" className="tb-btn" onClick={share}>
-              שיתוף
-            </button>
-          )}
           <div className="tb-menu" ref={menuRef}>
             <button type="button" className="tb-btn" aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen((v) => !v)}>
               מערכת

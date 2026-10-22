@@ -29,9 +29,14 @@
 }
 .tb-pop a, .tb-pop button { display: block; text-align: start; padding: 9px 12px; border: 0; background: none; font: inherit; font-size: 14px; color: #111111; text-decoration: none; border-radius: 8px; cursor: pointer; }
 .tb-pop a:hover, .tb-pop button:hover { background: #F0F0EE; }
+/* Share button: the home-page picture is the button. */
+.tb-share { display: inline-flex; align-items: center; gap: 8px; padding-block: 3px; padding-inline: 4px 12px; }
+.tb-share img { display: block; width: 56px; height: 29px; object-fit: cover; object-position: top; border-start-start-radius: 999px; border-end-start-radius: 999px; border-start-end-radius: 6px; border-end-end-radius: 6px; border: 1px solid #D6D6D4; }
 @keyframes tb-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 @media (max-width: 640px) {
   .tb-brand small, .tb-context { display: none; }
   .tb-brand span { font-size: 15px; }
   .tb-btn { padding: 6px 10px; font-size: 12px; }
+  .tb-share { padding-block: 3px; padding-inline: 3px 10px; }
+  .tb-share img { width: 46px; height: 24px; }
 }
