@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { DEV_CHAT_URL, RESEARCH_URL, SHARE_IMAGE, SHARE_TEXT, SHARE_VERSION } from '../lib/links'
+import { CITY_URL, DEV_CHAT_URL, RESEARCH_URL, SHARE_IMAGE, SHARE_TEXT, SHARE_VERSION } from '../lib/links'
 import '../styles/topbar.css'
 
 type InstallPrompt = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }
@@ -135,6 +135,9 @@ export default function TopBar({ context }: { context?: string }) {
               </div>
             )}
           </div>
+          <a href={CITY_URL} target="_blank" rel="noreferrer" className="tb-city" aria-label="אתר עיריית אשדוד">
+            <img src="/ashdod-logo.png" alt="עיריית אשדוד" width={55} height={32} />
+          </a>
         </nav>
       </div>
     </header>

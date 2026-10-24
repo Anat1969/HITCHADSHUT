@@ -11,3 +11,6 @@ export const SHARE_TEXT =
 // sentence changes: WhatsApp keeps an old preview per address, and a new address makes it fetch again.
 export const SHARE_VERSION = '2'
 export const SHARE_IMAGE = `/og.png?v=${SHARE_VERSION}`
+
+// Municipal topics carry the Ashdod municipality logo, at the left corner of the top bar.
+export const CITY_URL = 'https://www.ashdod.muni.il'
