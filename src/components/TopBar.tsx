@@ -1,55 +1,33 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { CITY_URL, DEV_CHAT_URL, RESEARCH_URL, SHARE_IMAGE, SHARE_TEXT, SHARE_VERSION } from '../lib/links'
 import '../styles/topbar.css'
 
-type InstallPrompt = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }
-
-// Chrome fires beforeinstallprompt once, possibly before the bar mounts: keep it at module level.
-let deferredInstall: InstallPrompt | null = null
-const installListeners = new Set<() => void>()
-if (typeof window !== 'undefined') {
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault()
-    deferredInstall = e as InstallPrompt
-    installListeners.forEach((f) => f())
-  })
-  window.addEventListener('appinstalled', () => {
-    deferredInstall = null
-    installListeners.forEach((f) => f())
-  })
+interface MenuElement extends HTMLElement {
+  items: { label: string; onSelect: () => unknown }[]
 }
 
-/** Fixed top bar on every page: icon and app name back to the home page, and the system menu. */
+declare module 'react' {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    interface IntrinsicElements {
+      'ai-menu': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & { chat?: string; research?: string }
+    }
+  }
+}
+
+/** Fixed top bar on every page: icon and app name back to the home page, and the A&I logo button
+ * (<ai-menu> from https://appofapp-gh.vercel.app/ai-menu.js): copy link, dev chat, research, install and admin. */
 export default function TopBar({ context }: { context?: string }) {
   const { pathname } = useLocation()
-  const [open, setOpen] = useState(false)
+  const navigate = useNavigate()
   const [sent, setSent] = useState(false)
-  const [canInstall, setCanInstall] = useState(!!deferredInstall)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<MenuElement>(null)
   const isHome = pathname === '/'
 
   useEffect(() => {
-    const f = () => setCanInstall(!!deferredInstall)
-    installListeners.add(f)
-    return () => {
-      installListeners.delete(f)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!open) return
-    const close = (e: MouseEvent) => {
-      if (!menuRef.current?.contains(e.target as Node)) setOpen(false)
-    }
-    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
-    document.addEventListener('mousedown', close)
-    document.addEventListener('keydown', esc)
-    return () => {
-      document.removeEventListener('mousedown', close)
-      document.removeEventListener('keydown', esc)
-    }
-  }, [open])
+    if (menuRef.current) menuRef.current.items = [{ label: 'ניהול', onSelect: () => navigate('/admin') }]
+  }, [navigate])
 
   // One button sends the app in one go: picture of the home page, one sentence, and the link.
   // Phones: the system share sheet with the picture as a file and the sentence and link as its caption.
@@ -82,15 +60,6 @@ export default function TopBar({ context }: { context?: string }) {
     setTimeout(() => setSent(false), 2400)
   }
 
-  const install = async () => {
-    if (!deferredInstall) return
-    await deferredInstall.prompt()
-    await deferredInstall.userChoice
-    deferredInstall = null
-    setCanInstall(false)
-    setOpen(false)
-  }
-
   return (
     <header className="tb" dir="rtl">
       <div className="tb-in">
@@ -110,31 +79,7 @@ export default function TopBar({ context }: { context?: string }) {
             <img src={SHARE_IMAGE} alt="" width={56} height={29} />
             <span>{sent ? 'ההודעה מוכנה בוואטסאפ' : 'שיתוף'}</span>
           </button>
-          <div className="tb-menu" ref={menuRef}>
-            <button type="button" className="tb-btn" aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen((v) => !v)}>
-              מערכת
-            </button>
-            {open && (
-              <div className="tb-pop" role="menu">
-                <a role="menuitem" href={DEV_CHAT_URL} target="_blank" rel="noreferrer">
-                  שיחת הפיתוח
-                </a>
-                {RESEARCH_URL && (
-                  <a role="menuitem" href={RESEARCH_URL} target="_blank" rel="noreferrer">
-                    פרויקט המחקר
-                  </a>
-                )}
-                {canInstall && (
-                  <button type="button" role="menuitem" onClick={install}>
-                    התקנת האפליקציה
-                  </button>
-                )}
-                <Link role="menuitem" to="/admin" onClick={() => setOpen(false)}>
-                  ניהול
-                </Link>
-              </div>
-            )}
-          </div>
+          <ai-menu ref={menuRef} chat={DEV_CHAT_URL} research={RESEARCH_URL || undefined} />
           <a href={CITY_URL} target="_blank" rel="noreferrer" className="tb-city" aria-label="אתר עיריית אשדוד">
             <img src="/ashdod-logo.png" alt="עיריית אשדוד" width={55} height={32} />
           </a>
