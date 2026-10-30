@@ -1,0 +1,315 @@
+[
+ {
+  "slug": "3-03-102-94",
+  "plan": "3/03/102/94",
+  "area": 34814,
+  "approved": {
+   "residential": 0.35537427471706784,
+   "open_public": 0.30970299304877347,
+   "road": 0.3349227322341587
+  },
+  "proposed": {
+   "residential": 0.35537427471706784,
+   "open_public": 0.36166484747515365,
+   "road": 0.28296087780777845
+  },
+  "uses_approved": 3,
+  "uses_proposed": 3
+ },
+ {
+  "slug": "3-03-104-66",
+  "plan": "3/03/104/66",
+  "area": 8790,
+  "approved": {
+   "residential": 0.7075085324232082,
+   "road": 0.2924914675767918
+  },
+  "proposed": {
+   "mixed": 0.6550625711035267,
+   "open_private": 0.052445961319681454,
+   "road": 0.2924914675767918
+  },
+  "uses_approved": 2,
+  "uses_proposed": 3
+ },
+ {
+  "slug": "3-03-104-67",
+  "plan": "3/03/104/67",
+  "area": 40790,
+  "approved": {
+   "residential": 0.26011277273841626,
+   "road": 0.6654327040941407,
+   "public": 0.07080166707526354,
+   "open_public": 0.003652856092179456
+  },
+  "proposed": {
+   "residential": 0.2834027948026477,
+   "public": 0.06835008580534445,
+   "open_public": 0.026869330718313312,
+   "road": 0.6213777886736945
+  },
+  "uses_approved": 5,
+  "uses_proposed": 5
+ },
+ {
+  "slug": "603-0271296",
+  "plan": "603-0271296",
+  "area": 20100.2,
+  "approved": {
+   "road": 0.3450030347956737,
+   "public": 0.21034616570979392,
+   "residential": 0.44465079949453234
+  },
+  "proposed": {
+   "road": 0.21960577506691475,
+   "public": 0.35581536502124356,
+   "residential": 0.4245783624043542
+  },
+  "uses_approved": 5,
+  "uses_proposed": 4
+ },
+ {
+  "slug": "603-0346031",
+  "plan": "603-0346031",
+  "area": 37367.32,
+  "approved": {
+   "road": 0.1600542106242194,
+   "public": 0.12178788764582392,
+   "residential": 0.19824081209640987,
+   "open_public": 0.5199170896335468
+  },
+  "proposed": {
+   "road": 0.11592750028634646,
+   "public": 0.2653254233913484,
+   "residential": 0.43607622917565403,
+   "open_public": 0.18267566418999276
+  },
+  "uses_approved": 5,
+  "uses_proposed": 6
+ },
+ {
+  "slug": "603-0391219",
+  "plan": "603-0391219",
+  "area": 30110.79,
+  "approved": {
+   "road": 0.2724016714200438,
+   "residential": 0.06997413278503681,
+   "mixed": 0.05040790608211183,
+   "commerce": 0.46272467997612254,
+   "open_public": 0.144491609736685
+  },
+  "proposed": {
+   "road": 0.22305625325672293,
+   "open_public": 0.35054211463731105,
+   "public": 0.03176934248487004,
+   "residential": 0.05134372097178453,
+   "mixed": 0.32501306010237524,
+   "commerce": 0.018275840653798853
+  },
+  "uses_approved": 7,
+  "uses_proposed": 12
+ },
+ {
+  "slug": "603-0704064",
+  "plan": "603-0704064",
+  "area": 6150.61,
+  "approved": {
+   "residential": 1.0
+  },
+  "proposed": {
+   "road": 0.004032120391310781,
+   "open_public": 0.11893129299370307,
+   "residential": 0.6513825457962706,
+   "mixed": 0.14263625884261885,
+   "open_private": 0.08301615612110019
+  },
+  "uses_approved": 1,
+  "uses_proposed": 6
+ },
+ {
+  "slug": "603-0780734",
+  "plan": "603-0780734",
+  "area": 17414.31,
+  "approved": {
+   "road": 0.24539946775380783,
+   "public": 0.060189117264028084,
+   "residential": 0.5557442953400147,
+   "commerce": 0.015627654153218956,
+   "open_public": 0.12303946548893041
+  },
+  "proposed": {
+   "road": 0.048764493109402555,
+   "open_public": 0.2431678315132784,
+   "public": 0.20335574593538303,
+   "residential": 0.5047113552015555
+  },
+  "uses_approved": 6,
+  "uses_proposed": 6
+ },
+ {
+  "slug": "603-0811588",
+  "plan": "603-0811588",
+  "area": 93937.3,
+  "approved": {
+   "residential": 1.0
+  },
+  "proposed": {
+   "residential": 1.0
+  },
+  "uses_approved": 1,
+  "uses_proposed": 1
+ },
+ {
+  "slug": "603-0993790",
+  "plan": "603-0993790",
+  "area": 5409.2,
+  "approved": {
+   "road": 0.09057301293900184,
+   "residential": 0.9094269870609981
+  },
+  "proposed": {
+   "road": 0.18927013236707832,
+   "residential": 0.5618021149153295,
+   "open_public": 0.02969015750942838,
+   "public": 0.2192191081860534
+  },
+  "uses_approved": 2,
+  "uses_proposed": 4
+ },
+ {
+  "slug": "603-1097815",
+  "plan": "603-1097815",
+  "area": 33568.74,
+  "approved": {
+   "road": 0.16623461756205118,
+   "public": 0.37385655969726767,
+   "residential": 0.3882780608444325,
+   "commerce": 0.02249634992997825,
+   "open_public": 0.04913441196627037
+  },
+  "proposed": {
+   "road": 0.22587383381086096,
+   "open_public": 0.1377531596360185,
+   "public": 0.3371231687576001,
+   "residential": 0.2992516251727053
+  },
+  "uses_approved": 6,
+  "uses_proposed": 7
+ },
+ {
+  "slug": "603-1259092",
+  "plan": "603-1259092",
+  "area": 35819.84,
+  "approved": {
+   "residential": 0.3446485400033499,
+   "road": 0.032884819384735635,
+   "public": 0.5155491039026296,
+   "open_public": 0.10691753670928479
+  },
+  "proposed": {
+   "road": 0.1401848807811537,
+   "open_public": 0.11990003305430735,
+   "public": 0.39526139703583274,
+   "residential": 0.3446525724291343
+  },
+  "uses_approved": 5,
+  "uses_proposed": 7
+ },
+ {
+  "slug": "tamal-2021",
+  "plan": "תמל/2021",
+  "area": 155032.83,
+  "approved": {
+   "road": 0.10340556476637142,
+   "public": 0.3487881505183503,
+   "residential": 0.19312177845443226,
+   "open_public": 0.354684506260846
+  },
+  "proposed": {
+   "road": 0.11626569675597098,
+   "public": 0.4130092961600456,
+   "residential": 0.17459721273229678,
+   "open_public": 0.2961276008442857
+  },
+  "uses_approved": 4,
+  "uses_proposed": 5
+ },
+ {
+  "slug": "tamal-2022",
+  "plan": "תמל/2022",
+  "area": 144520.65,
+  "approved": {
+   "road": 0.17893717132576806,
+   "residential": 0.19676861334071408,
+   "public": 0.5411430943814005,
+   "open_public": 0.08315112095211735
+  },
+  "proposed": {
+   "road": 0.18916950622627288,
+   "public": 0.5732163535107268,
+   "mixed": 0.1861429491218037,
+   "open_public": 0.051470845169877114
+  },
+  "uses_approved": 4,
+  "uses_proposed": 5
+ },
+ {
+  "slug": "tamal-2023",
+  "plan": "תמל/2023",
+  "area": 36562.47,
+  "approved": {
+   "road": 0.18705642407478973,
+   "public": 0.05894060619387821,
+   "residential": 0.24060348616591493,
+   "open_public": 0.5133986630465374
+  },
+  "proposed": {
+   "road": 0.19288631211184584,
+   "public": 0.5425454024304156,
+   "residential": 0.1601368835311181,
+   "mixed": 0.05739491888813857,
+   "open_public": 0.04703456850699638
+  },
+  "uses_approved": 5,
+  "uses_proposed": 6
+ },
+ {
+  "slug": "tamal-2024",
+  "plan": "תמל/2024",
+  "area": 38390.85,
+  "approved": {
+   "road": 0.1823651992706434,
+   "public": 0.2705392029174264,
+   "residential": 0.5470955978119302
+  },
+  "proposed": {
+   "road": 0.22856227460449563,
+   "public": 0.32096189586841656,
+   "residential": 0.28848540733013206,
+   "open_public": 0.16198911980328645
+  },
+  "uses_approved": 3,
+  "uses_proposed": 5
+ },
+ {
+  "slug": "tamal-2047",
+  "plan": "תמל/2047",
+  "area": 36114.66,
+  "approved": {
+   "road": 0.24633106274574956,
+   "public": 0.03685551309741374,
+   "residential": 0.6329678241125325,
+   "commerce": 0.007254804231046132,
+   "open_public": 0.07659079581325802
+  },
+  "proposed": {
+   "road": 0.1576977327212827,
+   "open_public": 0.17962511622703908,
+   "public": 0.1122369696959628,
+   "residential": 0.5432946066777314,
+   "mixed": 0.0071466822614417525
+  },
+  "uses_approved": 6,
+  "uses_proposed": 7
+ }
+]

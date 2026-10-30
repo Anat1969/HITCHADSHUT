@@ -1,0 +1,30 @@
+{
+ "plan_number": "603-0811588",
+ "source": "הוראות התכנית, טבלה 3.2",
+ "approved": [
+  {
+   "use": "מגורים ד'",
+   "m2": 93937.0,
+   "pct": 100.0
+  }
+ ],
+ "approved_total": 93937.0,
+ "proposed": [
+  {
+   "use": "מגורים ד'",
+   "m2": 93937.3,
+   "pct": 100.0
+  }
+ ],
+ "proposed_total": 93937.3,
+ "approved_sum_check": {
+  "sum": 93937.0,
+  "total": 93937.0,
+  "ok": true
+ },
+ "proposed_sum_check": {
+  "sum": 93937.3,
+  "total": 93937.3,
+  "ok": true
+ }
+}
