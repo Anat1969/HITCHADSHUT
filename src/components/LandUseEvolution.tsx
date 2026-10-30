@@ -65,11 +65,14 @@ export default function LandUseEvolution({ planNumber }: { planNumber: string })
     if (!ev) return null
     const a = sums(ev.approved), p = sums(ev.proposed)
     const fams = ORDER.filter((k) => a[k] > 0 || p[k] > 0)
-    const deltas = fams.map((k) => ({ k, d: p[k] / ev.proposed_total - a[k] / ev.approved_total })).sort((x, y) => x.d - y.d)
-    return { a, p, fams, loss: deltas[0], gain: deltas[deltas.length - 1] }
+    // The headline treats housing and mixed housing as one family: a residential plot that gains shops is not lost housing.
+    const merged = (s: Record<Fam, number>) => ({ ...s, residential: s.residential + s.mixed, mixed: 0 })
+    const ma = merged(a), mp = merged(p)
+    const deltas = fams.filter((k) => k !== 'mixed').map((k) => ({ k, d: mp[k] / ev.proposed_total - ma[k] / ev.approved_total })).sort((x, y) => x.d - y.d)
+    return { a, p, ma, mp, fams, loss: deltas[0], gain: deltas[deltas.length - 1] }
   }, [ev])
   if (!ev || !data) return null
-  const { a, p, fams, loss, gain } = data
+  const { a, p, ma, mp, fams, loss, gain } = data
   const share = (s: Record<Fam, number>, k: Fam, t: number) => (s[k] / t) * 100
   const cur = after ? p : a, curT = after ? ev.proposed_total : ev.approved_total
 
@@ -87,7 +90,7 @@ export default function LandUseEvolution({ planNumber }: { planNumber: string })
                 .map((x, i) => (
                   <span key={x.k}>
                     {i > 0 && '. '}
-                    <b>{FAM[x.k].label}</b>: מ-{pct(a[x.k] / ev.approved_total)} ל-{pct(p[x.k] / ev.proposed_total)} משטח התוכנית
+                    <b>{x.k === 'residential' ? 'מגורים (כולל מעורב)' : FAM[x.k].label}</b>: מ-{pct(ma[x.k] / ev.approved_total)} ל-{pct(mp[x.k] / ev.proposed_total)} משטח התוכנית
                   </span>
                 ))}
         </p>
