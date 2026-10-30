@@ -234,3 +234,18 @@
 .sun-method { margin-top: 14px; font-size: 15px; color: var(--m-ink-3); }
 .sun-method summary { cursor: pointer; font-weight: 400; color: var(--m-ink-2); }
 .sun-method p { font-size: 15px !important; }
+
+/* Land-use evolution: approved -> proposed (table 3.2) */
+.evo-toggle { margin-bottom: 12px; width: fit-content; }
+.evo-bar { display: flex; height: 44px; border-radius: 6px; overflow: hidden; box-shadow: 0 20px 40px -26px rgba(0,0,0,0.5); background: #E7E7E5; }
+.evo-bar i { display: block; height: 100%; transition: width 1.2s cubic-bezier(.2,.7,.2,1); }
+.evo-table { width: 100%; max-width: 640px; border-collapse: collapse; margin-top: 16px; font-size: 15px; font-variant-numeric: tabular-nums; }
+.evo-table th { text-align: start; font-weight: 400; font-size: 13px; color: var(--m-ink-3); padding: 6px 8px; border-bottom: 1px solid var(--m-line); }
+.evo-table td { padding: 8px; border-bottom: 1px solid var(--m-line-soft); color: var(--m-ink-2); }
+.evo-table td:first-child { display: flex; align-items: center; gap: 8px; }
+.evo-table td i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; }
+.evo-table td.up { color: #2E7D4F; font-weight: 600; }
+.evo-table td.down { color: #B3362D; font-weight: 600; }
+.evo-src { font-size: 14px !important; color: var(--m-ink-3) !important; margin-top: 10px !important; }
+.evo-src .chip, .mag-evo .chip { font-style: normal; font-size: 11px; border: 1px solid currentColor; border-radius: 3px; padding: 0 5px; }
+@media (prefers-reduced-motion: reduce) { .evo-bar i { transition: none; } }

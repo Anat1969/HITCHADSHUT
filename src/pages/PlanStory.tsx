@@ -6,6 +6,7 @@ import type { ChapterLayout, Media, PlanModel, ProjectWithMedia, StoryChapter, S
 import Plan3D, { type ViewMode } from '../components/Plan3D'
 import UnitsCompare from '../components/UnitsCompare'
 import ShadeStudy from '../components/ShadeStudy'
+import LandUseEvolution from '../components/LandUseEvolution'
 import FeedbackSection from '../components/FeedbackSection'
 import TopBar from '../components/TopBar'
 import { embedUrl, mediaSrc } from '../lib/media'
@@ -347,6 +348,7 @@ export default function PlanStory() {
 
         <nav className="mag-index" aria-label="תוכן העניינים">
           <a href="#model">המודל</a>
+          <a href="#evolution">הקרקע</a>
           {hasMassing && <a href="#sun">שמש וצל</a>}
           {(renders.length > 0 || videos.length > 0) && <a href="#renders">הדמיות</a>}
           {story.chapters.map((ch) => (
@@ -490,6 +492,7 @@ export default function PlanStory() {
           </div>
         )}
 
+        {project.plan_number && <LandUseEvolution planNumber={project.plan_number} />}
         {model && hasMassing && <ShadeStudy model={model} />}
 
         {(renders.length > 0 || videos.length > 0 || isStaff) && (
