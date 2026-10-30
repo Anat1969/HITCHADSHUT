@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import type { ChapterLayout, Media, PlanModel, ProjectWithMedia, StoryChapter, StoryFact } from '../lib/types'
 import Plan3D, { type ViewMode } from '../components/Plan3D'
 import UnitsCompare from '../components/UnitsCompare'
+import ShadeStudy from '../components/ShadeStudy'
 import FeedbackSection from '../components/FeedbackSection'
 import TopBar from '../components/TopBar'
 import { embedUrl, mediaSrc } from '../lib/media'
@@ -346,6 +347,7 @@ export default function PlanStory() {
 
         <nav className="mag-index" aria-label="תוכן העניינים">
           <a href="#model">המודל</a>
+          {hasMassing && <a href="#sun">שמש וצל</a>}
           {(renders.length > 0 || videos.length > 0) && <a href="#renders">הדמיות</a>}
           {story.chapters.map((ch) => (
             <a key={ch.id} href={`#${ch.id}`}>
@@ -487,6 +489,8 @@ export default function PlanStory() {
             ))}
           </div>
         )}
+
+        {model && hasMassing && <ShadeStudy model={model} />}
 
         {(renders.length > 0 || videos.length > 0 || isStaff) && (
           <section className="mag-gallery" id="renders" aria-label="הדמיות וסרטונים">

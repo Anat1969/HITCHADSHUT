@@ -211,3 +211,26 @@
 /* Compact cover: the deck reads as one short paragraph, not a second headline. */
 .mag-cover .mag-deck { font-size: clamp(16px, 1.5vw, 19px); max-width: 680px; }
 .mag-cover:not(:has(.mag-cover-img)) { min-height: 0; }
+
+/* Sun and shade study */
+.mag-sun .lead { margin-bottom: 14px; }
+.sun-controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.mag-modes.static { position: static; transform: none; flex-wrap: wrap; border-radius: 22px; }
+.sun-map { position: relative; border-radius: 8px; overflow: hidden; background: #E7E7E5; box-shadow: 0 30px 60px -32px rgba(0,0,0,0.45); }
+.sun-map canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.sun-busy { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(244,244,242,0.82); font-size: 16px; color: var(--m-ink-2); }
+.sun-clock { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.sun-clock button { border: 1px solid var(--m-ink); background: #FFFFFF; border-radius: 999px; min-height: 38px; padding: 0 16px; font: inherit; cursor: pointer; }
+.sun-clock button[aria-pressed='true'] { background: var(--m-ink); color: #FFFFFF; }
+.sun-clock input { flex: 1; min-width: 0; accent-color: var(--m-ink); }
+.sun-clock b { font-variant-numeric: tabular-nums; font-size: 18px; direction: ltr; }
+.sun-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 13px; color: var(--m-ink-3); }
+.sun-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sun-legend i { display: inline-block; width: 18px; height: 12px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.15); }
+.sun-facts { margin-top: 16px !important; }
+.sun-facts b { color: var(--m-ink); font-weight: 600; }
+.sun-facts span { display: block; font-size: 14px; color: var(--m-ink-3); }
+.sun-facts .chip { font-style: normal; font-size: 11px; border: 1px solid currentColor; border-radius: 3px; padding: 0 5px; margin-inline-start: 6px; }
+.sun-method { margin-top: 14px; font-size: 15px; color: var(--m-ink-3); }
+.sun-method summary { cursor: pointer; font-weight: 400; color: var(--m-ink-2); }
+.sun-method p { font-size: 15px !important; }
