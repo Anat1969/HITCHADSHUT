@@ -7,6 +7,7 @@ import Plan3D, { type ViewMode } from '../components/Plan3D'
 import UnitsCompare from '../components/UnitsCompare'
 import ShadeStudy from '../components/ShadeStudy'
 import LandUseEvolution from '../components/LandUseEvolution'
+import TashritEvolution from '../components/TashritEvolution'
 import FeedbackSection from '../components/FeedbackSection'
 import TopBar from '../components/TopBar'
 import { embedUrl, mediaSrc } from '../lib/media'
@@ -348,6 +349,7 @@ export default function PlanStory() {
 
         <nav className="mag-index" aria-label="תוכן העניינים">
           <a href="#model">המודל</a>
+          <a href="#tashrit">מתשריט לתשריט</a>
           <a href="#evolution">הקרקע</a>
           {hasMassing && <a href="#sun">שמש וצל</a>}
           {(renders.length > 0 || videos.length > 0) && <a href="#renders">הדמיות</a>}
@@ -492,6 +494,7 @@ export default function PlanStory() {
           </div>
         )}
 
+        {model && project.plan_number && <TashritEvolution model={model} planNumber={project.plan_number} />}
         {project.plan_number && <LandUseEvolution planNumber={project.plan_number} />}
         {model && hasMassing && <ShadeStudy model={model} />}
 

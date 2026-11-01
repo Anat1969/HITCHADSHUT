@@ -249,3 +249,16 @@
 .evo-src { font-size: 14px !important; color: var(--m-ink-3) !important; margin-top: 10px !important; }
 .evo-src .chip, .mag-evo .chip { font-style: normal; font-size: 11px; border: 1px solid currentColor; border-radius: 3px; padding: 0 5px; }
 @media (prefers-reduced-motion: reduce) { .evo-bar i { transition: none; } }
+
+/* From approved to proposed: the animated plan map */
+.tevo .lead { margin-bottom: 6px; }
+.tevo-text { min-height: 3.4em; }
+.tevo-map { border-radius: 8px; overflow: hidden; background: #F4F3EF; box-shadow: 0 30px 60px -32px rgba(0,0,0,0.45); }
+.tevo-map svg { display: block; width: 100%; height: auto; max-height: 72vh; }
+.tevo-l { transition: opacity 1s ease, fill-opacity 1s ease, stroke-opacity 0.8s ease; }
+.tevo-steps { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.tevo-steps button, .tevo-ctrl button { border: 1px solid var(--m-line); background: #FFFFFF; border-radius: 0; min-height: 36px; padding: 0 12px; font: inherit; font-size: 14px; color: var(--m-ink-2); cursor: pointer; box-shadow: 0 2px 0 var(--m-line); }
+.tevo-steps button.done { background: #ECECEA; }
+.tevo-steps button[aria-current='step'], .tevo-ctrl button[aria-pressed='true'] { background: var(--m-ink); color: #FFFFFF; border-color: var(--m-ink); }
+.tevo-ctrl { display: flex; gap: 8px; margin-top: 10px; }
+@media (prefers-reduced-motion: reduce) { .tevo-l { transition: none; } }
