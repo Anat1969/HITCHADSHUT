@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import { LAND_USE } from '../lib/labels'
 
-interface Row { use: string; m2: number }
-interface Evolution { plan_number: string; source: string; approved: Row[]; approved_total: number; proposed: Row[]; proposed_total: number }
+export interface Row { use: string; m2: number }
+export interface Evolution { plan_number: string; source: string; approved: Row[]; approved_total: number; proposed: Row[]; proposed_total: number }
 
 /** Folder name of a plan under public/plans: תמל/2022 -> tamal-2022, 3/03/104/66 -> 3-03-104-66. */
 export function planSlug(planNumber: string): string {
   return planNumber.replace(/^תמל\s*\/\s*/, 'tamal-').replace(/\s*\/\s*/g, '-')
 }
 
-type Fam = 'residential' | 'mixed' | 'commerce' | 'public' | 'open' | 'private_open' | 'road' | 'other'
-const FAM: Record<Fam, { label: string; color: string }> = {
+export type Fam = 'residential' | 'mixed' | 'commerce' | 'public' | 'open' | 'private_open' | 'road' | 'other'
+export const FAM: Record<Fam, { label: string; color: string }> = {
   residential: { label: 'מגורים', color: LAND_USE.residential.color },
   mixed: { label: 'מעורב', color: LAND_USE.mixed.color },
   commerce: { label: 'מסחר ותעסוקה', color: LAND_USE.commerce.color },
@@ -20,10 +20,10 @@ const FAM: Record<Fam, { label: string; color: string }> = {
   road: { label: 'דרך, שביל וחניה', color: LAND_USE.road.color },
   other: { label: 'אחר', color: '#CFCFCD' },
 }
-const ORDER: Fam[] = ['residential', 'mixed', 'commerce', 'public', 'open', 'private_open', 'road', 'other']
+export const ORDER: Fam[] = ['residential', 'mixed', 'commerce', 'public', 'open', 'private_open', 'road', 'other']
 
 /** Same families as scripts/evolution-compare.py. */
-function fam(u: string): Fam {
+export function fam(u: string): Fam {
   if (/חני/.test(u) && !u.includes('מסחר')) return 'road'
   if (u.includes('מעורב')) return 'mixed'
   if (u.includes('מגורים')) return /מסחר|ציבור|תעסוקה|משרדים/.test(u) ? 'mixed' : 'residential'
@@ -34,7 +34,7 @@ function fam(u: string): Fam {
   if (/דרך|דרכים|שביל/.test(u)) return 'road'
   return 'other'
 }
-function sums(rows: Row[]): Record<Fam, number> {
+export function sums(rows: Row[]): Record<Fam, number> {
   const s = Object.fromEntries(ORDER.map((k) => [k, 0])) as Record<Fam, number>
   for (const r of rows) s[fam(r.use)] += r.m2
   return s
