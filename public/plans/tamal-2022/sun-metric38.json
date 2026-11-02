@@ -1,0 +1,23 @@
+{
+ "plan_number": "תמל/2022",
+ "metric": 38,
+ "score": 2,
+ "roofs": {
+  "buildings": 230,
+  "passing": 226,
+  "share": 0.9826086956521739,
+  "point": 1
+ },
+ "open": {
+  "source": "plan_open_space",
+  "area": 6556.25,
+  "mean0": 5.437876211221838,
+  "mean1": 5.1668245329728455,
+  "drop": 0.04984513580681348,
+  "point": 1
+ },
+ "window": "21.12, 09:00-15:00",
+ "method": "שכבת השמש והצל של \"מה נבנה סביבי\" (src/lib/shade.ts): מיקום שמש לפי NOAA, בסטייה של 0.016 מעלות מ-NREL SPA; רשת של 2 מ'. הבדיקה: docs/validation-shading.md",
+ "limits": "חזיתות לא מחושבות. גובה הבניינים הקיימים משוער (OpenStreetMap או המפה העירונית). הקרקע שטוחה, בלי עצים.",
+ "computed_at": "2026-11-02"
+}
