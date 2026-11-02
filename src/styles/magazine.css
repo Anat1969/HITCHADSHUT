@@ -262,3 +262,5 @@
 .tevo-steps button[aria-current='step'], .tevo-ctrl button[aria-pressed='true'] { background: var(--m-ink); color: #FFFFFF; border-color: var(--m-ink); }
 .tevo-ctrl { display: flex; gap: 8px; margin-top: 10px; }
 @media (prefers-reduced-motion: reduce) { .tevo-l { transition: none; } }
+.sun-m38 { margin-top: 14px !important; padding: 12px 14px; border-inline-start: 3px solid var(--m-ink); background: rgba(255,255,255,0.6); font-size: 16px !important; }
+.sun-m38 .chip { font-style: normal; font-size: 11px; border: 1px solid currentColor; border-radius: 3px; padding: 0 5px; }

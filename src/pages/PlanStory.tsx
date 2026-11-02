@@ -6,7 +6,7 @@ import type { ChapterLayout, Media, PlanModel, ProjectWithMedia, StoryChapter, S
 import Plan3D, { type ViewMode } from '../components/Plan3D'
 import UnitsCompare from '../components/UnitsCompare'
 import ShadeStudy from '../components/ShadeStudy'
-import LandUseEvolution from '../components/LandUseEvolution'
+import LandUseEvolution, { planSlug } from '../components/LandUseEvolution'
 import TashritEvolution from '../components/TashritEvolution'
 import FeedbackSection from '../components/FeedbackSection'
 import TopBar from '../components/TopBar'
@@ -496,7 +496,7 @@ export default function PlanStory() {
 
         {model && project.plan_number && <TashritEvolution model={model} planNumber={project.plan_number} />}
         {project.plan_number && <LandUseEvolution planNumber={project.plan_number} />}
-        {model && hasMassing && <ShadeStudy model={model} />}
+        {model && hasMassing && <ShadeStudy model={model} slug={project.plan_number ? planSlug(project.plan_number) : undefined} />}
 
         {(renders.length > 0 || videos.length > 0 || isStaff) && (
           <section className="mag-gallery" id="renders" aria-label="הדמיות וסרטונים">

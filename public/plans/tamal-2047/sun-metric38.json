@@ -1,0 +1,23 @@
+{
+ "plan_number": "תמל/2047",
+ "metric": 38,
+ "score": 0,
+ "roofs": {
+  "buildings": 91,
+  "passing": 77,
+  "share": 0.8461538461538461,
+  "point": 0
+ },
+ "open": {
+  "source": "plan_open_space",
+  "area": 5696,
+  "mean0": 4.217344716473828,
+  "mean1": 2.5028087517581463,
+  "drop": 0.40654394648328046,
+  "point": 0
+ },
+ "window": "21.12, 09:00-15:00",
+ "method": "שכבת השמש והצל של \"מה נבנה סביבי\" (src/lib/shade.ts): מיקום שמש לפי NOAA, בסטייה של 0.016 מעלות מ-NREL SPA; רשת של 2 מ'. הבדיקה: docs/validation-shading.md",
+ "limits": "חזיתות לא מחושבות. גובה הבניינים הקיימים משוער (OpenStreetMap או המפה העירונית). הקרקע שטוחה, בלי עצים.",
+ "computed_at": "2026-11-02"
+}

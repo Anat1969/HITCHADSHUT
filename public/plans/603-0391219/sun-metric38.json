@@ -1,0 +1,23 @@
+{
+ "plan_number": "603-0391219",
+ "metric": 38,
+ "score": 1,
+ "roofs": {
+  "buildings": 67,
+  "passing": 67,
+  "share": 1,
+  "point": 1
+ },
+ "open": {
+  "source": "plan_open_space",
+  "area": 8636,
+  "mean0": 2.4874168875428357,
+  "mean1": 1.856878101308073,
+  "drop": 0.25349139880514066,
+  "point": 0
+ },
+ "window": "21.12, 09:00-15:00",
+ "method": "שכבת השמש והצל של \"מה נבנה סביבי\" (src/lib/shade.ts): מיקום שמש לפי NOAA, בסטייה של 0.016 מעלות מ-NREL SPA; רשת של 2 מ'. הבדיקה: docs/validation-shading.md",
+ "limits": "חזיתות לא מחושבות. גובה הבניינים הקיימים משוער (OpenStreetMap או המפה העירונית). הקרקע שטוחה, בלי עצים.",
+ "computed_at": "2026-11-02"
+}

@@ -218,12 +218,12 @@ export function shadeAt(r: Raster, H: Float32Array, az: number, el: number, out 
   return out
 }
 
-/** Hours of direct sun per cell over the day, sampled every `stepMin` minutes while the sun is up. */
-export function sunHours(r: Raster, H: Float32Array, season: Season, stepMin = 10): Float32Array {
+/** Hours of direct sun per cell between `from` and `to` (local clock), sampled every `stepMin` minutes while the sun is up. */
+export function sunHours(r: Raster, H: Float32Array, season: Season, stepMin = 10, from = 3, to = 21): Float32Array {
   const hours = new Float32Array(r.w * r.h)
   const sh = new Uint8Array(r.w * r.h)
   const dt = stepMin / 60
-  for (let t = 3 + dt / 2; t < 21; t += dt) {
+  for (let t = from + dt / 2; t < to; t += dt) {
     const { az, el } = sunPosition(seasonTime(season, t), r.lat0, r.lon0)
     if (el <= 0) continue
     shadeAt(r, H, az, el, sh)
@@ -273,4 +273,50 @@ export function neighbourMask(r: Raster, inside: Uint8Array, dist = 100): Uint8A
     }
   }
   return m
+}
+
+export interface Metric38 {
+  /** Points out of 2 by the official criterion (Shchuna 360 v2.0, metric 38, p. 111); facades are not computed. */
+  score: number
+  roofs: { buildings: number; passing: number; share: number; point: number }
+  open: { source: 'plan_open_space' | 'ground_ring'; area: number; mean0: number; mean1: number; drop: number; point: number }
+  window: string
+}
+
+/**
+ * Metric 38 (זכויות שמש) on 21 December, 09:00-15:00, as the official text states it:
+ * roofs: a neighbouring building passes when, after the plan, at least half its roof keeps 4 hours of sun,
+ *   or, when it did not reach that today, its share drops by at most 20%; 1 point when 90% of them pass.
+ * open spaces: 1 point when the plan's public open spaces (or, without any, the open ground within 100 m)
+ *   lose at most 20% of their sun hours against today.
+ */
+export function metric38(model: ShadeModel): Metric38 {
+  const r = makeRaster(model)
+  const H0 = heights(r, model, 'today'), H1 = heights(r, model, 'after')
+  const h0 = sunHours(r, H0, 'winter', 10, 9, 15), h1 = sunHours(r, H1, 'winter', 10, 9, 15)
+  const inside = mask(r, model.boundary), near = neighbourMask(r, inside, 100)
+  let buildings = 0, passing = 0
+  for (const f of model.context.features) {
+    const cells: number[] = []
+    for (const poly of rings(f.geometry)) fillPolygon(r, poly, (i) => { if (near[i] && H0[i] > 0 && H1[i] > 0) cells.push(i) })
+    if (cells.length < 3) continue
+    buildings++
+    const s0 = cells.filter((i) => h0[i] >= 4).length / cells.length
+    const s1 = cells.filter((i) => h1[i] >= 4).length / cells.length
+    if (s1 >= 0.5 || (s0 < 0.5 && (s0 === 0 || (s0 - s1) / s0 <= 0.2))) passing++
+  }
+  const share = buildings ? passing / buildings : 1
+  const openMask = mask(r, model.parcels, (p) => p.cat === 'open')
+  let n = 0
+  for (let i = 0; i < openMask.length; i++) if (openMask[i] && !H0[i] && !H1[i]) n++
+  const src: 'plan_open_space' | 'ground_ring' = n > 25 ? 'plan_open_space' : 'ground_ring'
+  const o = receptorStats(r, 'open', '', src === 'plan_open_space' ? openMask : near, H0, H1, h0, h1)
+  const drop = o.mean0 ? (o.mean0 - o.mean1) / o.mean0 : 0
+  const roofPoint = share >= 0.9 ? 1 : 0, openPoint = drop <= 0.2 ? 1 : 0
+  return {
+    score: roofPoint + openPoint,
+    roofs: { buildings, passing, share, point: roofPoint },
+    open: { source: src, area: o.area, mean0: o.mean0, mean1: o.mean1, drop, point: openPoint },
+    window: '21.12, 09:00-15:00',
+  }
 }

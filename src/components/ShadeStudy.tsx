@@ -34,7 +34,17 @@ function diffColor(d: number): [number, number, number] {
   return [p[0] + (c[0] - p[0]) * t, p[1] + (c[1] - p[1]) * t, p[2] + (c[2] - p[2]) * t]
 }
 
-export default function ShadeStudy({ model }: { model: PlanModel }) {
+interface M38 { score: number; roofs: { buildings: number; passing: number; share: number }; open: { source: string; mean0: number; mean1: number; drop: number } }
+
+export default function ShadeStudy({ model, slug }: { model: PlanModel; slug?: string }) {
+  const [m38, setM38] = useState<M38 | null>(null)
+  useEffect(() => {
+    if (!slug) return
+    fetch(`/plans/${slug}/sun-metric38.json`)
+      .then((r) => (r.ok && r.headers.get('content-type')?.includes('json') ? r.json() : null))
+      .then(setM38)
+      .catch(() => {})
+  }, [slug])
   const [season, setSeason] = useState<Season>('winter')
   const [view, setView] = useState<View>('diff')
   const [hour, setHour] = useState(10)
@@ -176,6 +186,15 @@ export default function ShadeStudy({ model }: { model: PlanModel }) {
               </li>
             )}
           </ul>
+        )}
+        {m38 && (
+          <p className="sun-m38">
+            <b>מדד 38, זכויות שמש, בשכונה 360: {m38.score} מתוך 2.</b> לפי הבדיקה הרשמית, 21 בדצמבר, 9:00 עד 15:00.
+            {' '}גגות סמוכים: {Math.round(m38.roofs.share * 100)}% עומדים בסף ({m38.roofs.passing} מתוך {m38.roofs.buildings}, נדרש 90%).
+            {' '}{m38.open.source === 'plan_open_space' ? 'השטחים הפתוחים בתוכנית' : 'הקרקע הפתוחה סביב'}: מ-{hrs(m38.open.mean0)} ל-{hrs(m38.open.mean1)} שעות,
+            {' '}ירידה של {Math.round(m38.open.drop * 100)}% (מותר עד 20%).
+            {' '}<em className="chip">חישוב בסימולציה</em>
+          </p>
         )}
         <details className="sun-method">
           <summary>איך זה חושב, ועד כמה אפשר לסמוך</summary>
