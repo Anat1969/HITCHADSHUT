@@ -264,3 +264,8 @@
 @media (prefers-reduced-motion: reduce) { .tevo-l { transition: none; } }
 .sun-m38 { margin-top: 14px !important; padding: 12px 14px; border-inline-start: 3px solid var(--m-ink); background: rgba(255,255,255,0.6); font-size: 16px !important; }
 .sun-m38 .chip { font-style: normal; font-size: 11px; border: 1px solid currentColor; border-radius: 3px; padding: 0 5px; }
+/* שער היעדים (שכונה 360°): כרטיס קומפקטי בעמוד התוכנית */
+.gate-card .gate-facts li b { font-weight: 500; color: var(--m-ink); }
+.gate-card .gate-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.gate-card .gate-links a.mag-pill { color: #FFFFFF; text-decoration: none; }
+.gate-card .gate-links a.mag-pill.light { color: #111111; }
