@@ -2,7 +2,7 @@
 # python3 -I scripts/evolution-compare.py  -> markdown table on stdout, and supabase/seed/evolution/_summary.json
 import glob, json, os, re
 
-LABEL = {'residential': 'מגורים', 'mixed': 'מעורב', 'public': 'מבני ציבור', 'open_public': 'שצ"פ וכיכר', 'open_private': 'שפ"פ', 'road': 'דרך, שביל וחניה', 'commerce': 'מסחר ותעסוקה', 'other': 'אחר'}
+LABEL = {'residential': 'מגורים', 'mixed': 'מעורב', 'public': 'מבני ציבור', 'open_public': 'שצ"פ וכיכר', 'open_private': 'שפ"פ', 'road': 'דרך, שביל וחניה', 'commerce': 'מסחר ותעסוקה', 'industry': 'נמל, תעשייה ואחסנה', 'other': 'אחר'}
 
 def cat(u):
     """Land-use family of a table 3.2 row. Mixed = housing with commerce, offices or public uses, or 'עירוני מעורב'."""
@@ -10,7 +10,8 @@ def cat(u):
     if 'מעורב' in u: return 'mixed'
     if 'מגורים' in u: return 'mixed' if re.search(r'מסחר|ציבור|תעסוקה|משרדים', u) else 'residential'
     if re.search(r'פרטי פתוח|שפ"פ', u): return 'open_private'
-    if re.search(r'ציבורי פתוח|שצ"פ|כיכר|ככר', u): return 'open_public'
+    if re.search(r'ציבורי פתוח|שצ"פ|כיכר|ככר|נחל|שימור טבע|שפת הים', u): return 'open_public'
+    if re.search(r'נמל|תעשי|אחסנה|מסוף|דלק|פחם|עירום', u): return 'industry'
     if re.search(r'מסחר|תעסוקה', u): return 'mixed' if re.search(r'מבנים ומוסדות ציבור', u) else 'commerce'
     if 'ציבור' in u: return 'public'
     if re.search(r'דרך|דרכים|שביל', u): return 'road'
@@ -25,11 +26,13 @@ out = []
 for f in sorted(glob.glob('supabase/seed/evolution/*.json')):
     if os.path.basename(f).startswith('_'): continue
     d = json.load(open(f))
+    # plans of another kind (the port hinterland, 4,855 dunam) would swamp the area-weighted averages of the housing plans
+    if d.get('compare') is False: continue
     a, p = shares(d['approved'], d['approved_total']), shares(d['proposed'], d['proposed_total'])
     out.append({'slug': os.path.basename(f)[:-5], 'plan': d['plan_number'], 'area': d['proposed_total'], 'approved': a, 'proposed': p,
                 'uses_approved': len(d['approved']), 'uses_proposed': len(d['proposed'])})
 json.dump(out, open('supabase/seed/evolution/_summary.json', 'w'), ensure_ascii=False, indent=1)
-keys = ['residential', 'mixed', 'commerce', 'public', 'open_public', 'open_private', 'road']
+keys = ['residential', 'mixed', 'commerce', 'industry', 'public', 'open_public', 'open_private', 'road']
 print('| תוכנית | שטח (דונם) | ' + ' | '.join(LABEL[k] for k in keys) + ' | ייעודים |')
 print('|---|---|' + '---|' * len(keys) + '---|')
 for o in out:

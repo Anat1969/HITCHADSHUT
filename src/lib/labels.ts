@@ -67,6 +67,7 @@ export const LAND_USE: Record<string, { label: string; color: string }> = {
   mixed: { label: 'מגורים ומסחר', color: '#D4834A' },
   commerce: { label: 'מסחר', color: '#B85C98' },
   employment: { label: 'תעסוקה', color: '#7A63B4' },
+  industry: { label: 'נמל, תעשייה ואחסנה', color: '#5E8299' },
   public: { label: 'מבני ציבור', color: '#9A6A4C' },
   open: { label: 'שטח פתוח', color: '#6EA65F' },
   road: { label: 'דרכים, שבילים וחניה', color: '#A8A8A6' },

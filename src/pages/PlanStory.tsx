@@ -610,9 +610,18 @@ export default function PlanStory() {
 
         <footer className="mag-foot">
           <span>{story.disclaimer}</span>
-          <a href={story.mavat_url} target="_blank" rel="noreferrer">
-            מסמכי התוכנית המלאים באתר תכנון זמין
-          </a>
+          {story.mavat_url ? (
+            <a href={story.mavat_url} target="_blank" rel="noreferrer">
+              מסמכי התוכנית המלאים באתר תכנון זמין
+            </a>
+          ) : (
+            // older plans that are not on the planning portal: the scanned documents kept in the repo
+            project.plan_number && (
+              <a href={`/plans/${planSlug(project.plan_number)}/docs/horaot.pdf`} target="_blank" rel="noreferrer">
+                הוראות התוכנית הסרוקות
+              </a>
+            )
+          )}
           <span className="mag-label">
             {story.official_name} · {story.plan_number}
           </span>
