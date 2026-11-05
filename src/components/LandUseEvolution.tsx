@@ -10,18 +10,19 @@ export function planSlug(planNumber: string): string {
   return planNumber.replace(/^תמל\s*\/\s*/, 'tamal-').replace(/\s*\/\s*/g, '-').replace(/א$/, 'a').replace(/ב$/, 'b')
 }
 
-export type Fam = 'residential' | 'mixed' | 'commerce' | 'public' | 'open' | 'private_open' | 'road' | 'other'
+export type Fam = 'residential' | 'mixed' | 'commerce' | 'industry' | 'public' | 'open' | 'private_open' | 'road' | 'other'
 export const FAM: Record<Fam, { label: string; color: string }> = {
   residential: { label: 'מגורים', color: LAND_USE.residential.color },
   mixed: { label: 'מעורב', color: LAND_USE.mixed.color },
   commerce: { label: 'מסחר ותעסוקה', color: LAND_USE.commerce.color },
+  industry: { label: 'נמל, תעשייה ואחסנה', color: LAND_USE.industry.color },
   public: { label: 'מבני ציבור', color: LAND_USE.public.color },
   open: { label: 'שטח ציבורי פתוח', color: LAND_USE.open.color },
   private_open: { label: 'שטח פרטי פתוח', color: '#A9CB8F' },
   road: { label: 'דרך, שביל וחניה', color: LAND_USE.road.color },
   other: { label: 'אחר', color: '#CFCFCD' },
 }
-export const ORDER: Fam[] = ['residential', 'mixed', 'commerce', 'public', 'open', 'private_open', 'road', 'other']
+export const ORDER: Fam[] = ['residential', 'mixed', 'commerce', 'industry', 'public', 'open', 'private_open', 'road', 'other']
 
 /** Same families as scripts/evolution-compare.py. */
 export function fam(u: string): Fam {
@@ -29,7 +30,8 @@ export function fam(u: string): Fam {
   if (u.includes('מעורב')) return 'mixed'
   if (u.includes('מגורים')) return /מסחר|ציבור|תעסוקה|משרדים/.test(u) ? 'mixed' : 'residential'
   if (/פרטי פתוח|שפ"פ/.test(u)) return 'private_open'
-  if (/ציבורי פתוח|שצ"פ|כיכר|ככר/.test(u)) return 'open'
+  if (/ציבורי פתוח|שצ"פ|כיכר|ככר|נחל|שימור טבע|שפת הים/.test(u)) return 'open'
+  if (/נמל|תעשי|אחסנה|מסוף|דלק|פחם|עירום/.test(u)) return 'industry'
   if (/מסחר|תעסוקה/.test(u)) return /מבנים ומוסדות ציבור/.test(u) ? 'mixed' : 'commerce'
   if (u.includes('ציבור')) return 'public'
   if (/דרך|דרכים|שביל/.test(u)) return 'road'

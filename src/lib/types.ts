@@ -107,7 +107,7 @@ export type ChapterLayout = 'classic' | 'quote' | 'columns' | 'image' | 'dark'
 export interface PlanStory {
   plan_number: string
   official_name: string
-  mavat_url: string
+  mavat_url?: string
   kicker: string
   headline: string
   headline_serif?: string
