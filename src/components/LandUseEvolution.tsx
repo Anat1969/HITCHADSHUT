@@ -4,9 +4,10 @@ import { LAND_USE } from '../lib/labels'
 export interface Row { use: string; m2: number }
 export interface Evolution { plan_number: string; source: string; approved: Row[]; approved_total: number; proposed: Row[]; proposed_total: number }
 
-/** Folder name of a plan under public/plans: תמל/2022 -> tamal-2022, 3/03/104/66 -> 3-03-104-66. */
+/** Folder name of a plan under public/plans: תמל/2022 -> tamal-2022, 3/03/104/66 -> 3-03-104-66, 3/03/101/71א -> 3-03-101-71a. */
 export function planSlug(planNumber: string): string {
-  return planNumber.replace(/^תמל\s*\/\s*/, 'tamal-').replace(/\s*\/\s*/g, '-')
+  // A letter suffix (3/03/101/71א) is written in Latin letters, so folder names stay ASCII.
+  return planNumber.replace(/^תמל\s*\/\s*/, 'tamal-').replace(/\s*\/\s*/g, '-').replace(/א$/, 'a').replace(/ב$/, 'b')
 }
 
 export type Fam = 'residential' | 'mixed' | 'commerce' | 'public' | 'open' | 'private_open' | 'road' | 'other'
