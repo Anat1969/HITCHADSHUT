@@ -113,5 +113,12 @@
 
 מסמכי תוכנית נמצאים ב-Drive בתיקייה "2. תבעות", תיקייה לכל מתחם. את טקסט ההוראות קוראים בהורדת ה-PDF והרצת pdftotext (הטקסט שמחזיר Drive הפוך ומבולגן).
 
+## כתבות (`/articles`, 07.11.2026, לבקשת ענת)
+- כתבת A4 לכל נושא, בפורמט גיליון שרטוט (`blueprint`): 9 נושאים (ידע, הבנה, יישום) ו-22 מקורות ל"יצירת כתבה". לכל כתבה: הורדה והדפסה, והעלאה לחדר `room-hitchadshut` במוזיאון (TAARUCHA).
+- הרכיב המשותף `<app-creations>` נטען ב-`index.html` מ-GitHub Pages של AppOfApp-GH, ומ-Vercel כגיבוי. הכפתור "כתבות" בסרגל העליון (בטלפון, בעמוד פנימי, הוא מוסתר כדי שהסרגל לא יגלוש).
+- הנתונים: `public/creations.json`, נגזר ב-`node tools/creations.mjs` מסיפורי התוכניות (`supabase/seed/*.story.json`), מ-`docs/planning-insights.md` ומ-`docs/evolution-compare.md`. מריצים שוב אחרי כל שינוי בהם. בלי כתובות בתים ובלי שמות של יזמים או דיירים.
+- התמונות: תשריטים ומודלים שכבר בריפו, וחיתוכים של תשריטים מ-`public/plans/*/docs` ב-`public/creations/img`.
+- בדיקה: `npx vite preview --port 4194 & node tests/creations.cjs` (הרכיב מוגש מ-`tests/fixtures/creations.js`).
+
 ## A&I logo button
 The top bar holds only the app name (links home), content navigation, and ONE logo button "אד' ענת שטיבלמן A&I" (`<ai-menu>` from https://appofapp-gh.vercel.app/ai-menu.js). Every editing and development action (העתקת קישור, שיחת הפיתוח, פרויקט המחקר, התקנת האפליקציה, edit mode, add, delete) lives only inside it, never as loose buttons. Standard: https://github.com/Anat1969/AppOfApp-GH/blob/main/docs/ai-menu-standard.md

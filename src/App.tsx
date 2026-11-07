@@ -4,6 +4,7 @@ import Home from './pages/Home'
 
 const AdminApp = lazy(() => import('./admin/AdminApp'))
 const PlanStory = lazy(() => import('./pages/PlanStory'))
+const Articles = lazy(() => import('./pages/Articles'))
 
 export default function App() {
   return (
@@ -16,6 +17,14 @@ export default function App() {
           element={
             <Suspense fallback={<div className="loading">טוען את התוכנית...</div>}>
               <PlanStory />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/articles"
+          element={
+            <Suspense fallback={<div className="loading">טוען את הכתבות...</div>}>
+              <Articles />
             </Suspense>
           }
         />
