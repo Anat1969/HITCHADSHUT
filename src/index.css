@@ -381,3 +381,7 @@ b, strong { font-weight: 500; }
   .brand h1 { font-size: 34px; }
   .detail h2 { font-size: 30px; }
 }
+
+/* ---------- כתבות (/articles): הדף נגלל רגיל, ברוחב המסך ---------- */
+html:has(.articles-page), html:has(.articles-page) body, html:has(.articles-page) #root { height: auto; }
+.articles-main { max-width: 1440px; margin: 0 auto; padding: 24px 16px 64px; }

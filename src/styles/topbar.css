@@ -52,3 +52,6 @@
   .tb-share { padding: 3px; }
   .tb-city { padding-inline-start: 6px; }
 }
+
+/* כתבות: בטלפון, בעמוד פנימי שיש בו גם "דף הבית", הכפתור מוסתר כדי שהסרגל לא יגלוש. מדף הבית הוא תמיד גלוי. */
+@media (max-width: 480px) { .tb-articles-inner { display: none; } }

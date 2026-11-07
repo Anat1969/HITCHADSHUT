@@ -75,6 +75,11 @@ export default function TopBar({ context }: { context?: string }) {
               דף הבית
             </Link>
           )}
+          {pathname !== '/articles' && (
+            <Link to="/articles" className={isHome ? 'tb-btn' : 'tb-btn tb-articles-inner'}>
+              כתבות
+            </Link>
+          )}
           <button type="button" className="tb-btn tb-share" onClick={share} aria-label="שיתוף האפליקציה: תמונה, משפט וקישור">
             <img src={SHARE_IMAGE} alt="" width={56} height={29} />
             <span>{sent ? 'ההודעה מוכנה בוואטסאפ' : 'שיתוף'}</span>
