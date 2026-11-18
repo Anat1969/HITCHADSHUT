@@ -361,6 +361,7 @@ export default function PlanStory() {
           ))}
           <a href="#docs">מסמכים</a>
           <a href="#voice">שאלות</a>
+          <Link to={`/city?focus=${encodeURIComponent(project.plan_number ?? story.plan_number)}`}>במודל העיר</Link>
         </nav>
 
         <section className="mag-stage" id="model" aria-label="המודל התלת-ממדי">

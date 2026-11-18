@@ -111,3 +111,9 @@
 
 /* Plan number under each project name in the list. */
 .fp-list .pn { display: block; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; letter-spacing: 0.06em; color: var(--f-ink-3); unicode-bidi: isolate; margin-top: 2px; }
+
+/* Link to the city model (/city). */
+.fp-city { display: grid; gap: 2px; padding: 10px 14px; border-radius: 8px; background: #111111; color: #FFFFFF; text-decoration: none; box-shadow: 0 10px 24px -14px rgba(0,0,0,0.6); }
+.fp-city b { font-weight: 500; font-size: 15px; }
+.fp-city span { font-size: 13px; color: #D6D6D4; }
+.fp-city:hover { background: #2A2A28; }

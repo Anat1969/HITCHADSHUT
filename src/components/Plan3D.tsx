@@ -6,7 +6,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import type { PlanModel } from '../lib/types'
 import { bboxOf } from '../lib/geo'
-import { LAND_USE } from '../lib/labels'
+import { landUseColor } from '../lib/mapColors'
 
 export type ViewMode = 'today' | 'allowed' | 'after'
 
@@ -21,11 +21,6 @@ maplibregl.setWorkerUrl(workerUrl)
 
 // OpenFreeMap: free vector basemap, no key and no registration (openfreemap.org).
 const BASE_STYLE_URL = 'https://tiles.openfreemap.org/styles/positron'
-
-/** MapLibre colour expression by land use (`cat` on massing and lot features). */
-function useColor(fallback: string): maplibregl.ExpressionSpecification {
-  return ['match', ['get', 'cat'], ...Object.entries(LAND_USE).flatMap(([k, v]) => [k, v.color]), fallback] as unknown as maplibregl.ExpressionSpecification
-}
 
 export default function Plan3D({ model, mode, selectedLot, onSelectLot }: Props) {
   const el = useRef<HTMLDivElement>(null)
@@ -94,7 +89,7 @@ export default function Plan3D({ model, mode, selectedLot, onSelectLot }: Props)
           id: 'parcels-fill',
           type: 'fill',
           source: 'parcels',
-          paint: { 'fill-color': useColor('#141414'), 'fill-opacity': ['case', ['has', 'cat'], 0.32, 0.01] },
+          paint: { 'fill-color': landUseColor('#141414'), 'fill-opacity': ['case', ['has', 'cat'], 0.32, 0.01] },
         })
         map.addLayer({
           id: 'parcels',
@@ -207,7 +202,7 @@ export default function Plan3D({ model, mode, selectedLot, onSelectLot }: Props)
       ['==', ['get', 'lot'], sel],
       '#141414',
       ['has', 'cat'],
-      useColor('#9C9C9A'),
+      landUseColor('#9C9C9A'),
       ['==', ['get', 'kind'], 'podium'],
       '#B5B5B3',
       ['interpolate', ['linear'], ['get', 'top'], 45, '#C4C4C2', 100, '#8E8E8C'],
