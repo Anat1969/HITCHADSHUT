@@ -62,7 +62,11 @@ export default function CityMap3D({ twin, view, color, focus, onPick }: Props) {
 
   useEffect(() => {
     if (!el.current) return
-    const b = bboxOf(twin.boundaries)!
+    // Opening view: the residential plans (a large port or industry plan would zoom the city out).
+    const homes = new Set(twin.plans.filter((p) => p.kind !== 'infrastructure').map((p) => p.plan_number))
+    const b =
+      bboxOf({ type: 'FeatureCollection', features: twin.boundaries.features.filter((f) => homes.has(f.properties?.plan_number)) }) ??
+      bboxOf(twin.boundaries)!
     const map = new maplibregl.Map({
       container: el.current,
       style: BASE_STYLE_URL,
