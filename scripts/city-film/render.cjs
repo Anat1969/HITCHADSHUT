@@ -118,7 +118,7 @@ function timeline(plans, camAll, camEx) {
   }
   await browser.close()
   server.close()
-  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(FPS / step), '-i', path.join(frames, 'f%05d.jpg'), '-c:v', 'libx264', '-preset', 'slow', '-crf', '21', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', OUT])
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(FPS / step), '-i', path.join(frames, 'f%05d.jpg'), '-c:v', 'libx264', '-preset', 'slow', '-crf', '28', '-tune', 'animation', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', OUT])
   console.log(`wrote ${OUT} (${n} frames, ${(fs.statSync(OUT).size / 1e6).toFixed(1)} MB), frames in ${frames}`)
 })().catch((e) => {
   console.error(e)
