@@ -75,6 +75,11 @@ export default function TopBar({ context }: { context?: string }) {
               דף הבית
             </Link>
           )}
+          {pathname !== '/city' && (
+            <Link to="/city" className={isHome ? 'tb-btn' : 'tb-btn tb-articles-inner'}>
+              מודל העיר
+            </Link>
+          )}
           {pathname !== '/articles' && (
             <Link to="/articles" className={isHome ? 'tb-btn' : 'tb-btn tb-articles-inner'}>
               כתבות

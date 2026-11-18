@@ -1,0 +1,68 @@
+/* City model page (/city): every plan in one 3D model. */
+.city { min-height: 100vh; background: linear-gradient(180deg, #F4F4F2, #E6E6E4); color: #111111; font-family: 'Heebo', system-ui, sans-serif; }
+.city-head { max-width: 1400px; margin: 0 auto; padding: 14px clamp(14px, 4vw, 56px) 10px; display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 10px 20px; }
+.city-head h1 { margin: 0; font-weight: 200; font-size: clamp(28px, 4vw, 44px); letter-spacing: -0.01em; }
+.city-head p { margin: 2px 0 0; color: #555555; font-size: 15px; }
+.city-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.city-seg { display: inline-flex; border: 1px solid #B9B9B7; border-radius: 999px; overflow: hidden; background: #FFFFFF; }
+.city-seg button { border: 0; background: none; font: inherit; font-size: 13px; padding: 7px 13px; cursor: pointer; color: #111111; }
+.city-seg button + button { border-inline-start: 1px solid #D6D6D4; }
+.city-seg button[aria-pressed='true'] { background: #111111; color: #FFFFFF; }
+.city-btn { border: 1px solid #B9B9B7; background: linear-gradient(180deg, #FFFFFF, #ECECEA); font: inherit; font-size: 13px; padding: 7px 14px; border-radius: 999px; cursor: pointer; color: #111111; }
+.city-btn[aria-pressed='true'] { background: #111111; color: #FFFFFF; border-color: #111111; }
+
+.city-stage { position: relative; max-width: 1400px; margin: 0 auto 24px; height: calc(100vh - 170px); min-height: 420px; border-radius: 10px; overflow: hidden; box-shadow: 0 18px 40px -24px rgba(0,0,0,0.5); background: #E8E8E6; }
+.city-stage:fullscreen { max-width: none; margin: 0; height: 100vh; border-radius: 0; }
+.city-stage.is-full { position: fixed; inset: 0; z-index: 2000; max-width: none; margin: 0; height: auto; border-radius: 0; }
+.city-map { position: absolute; inset: 0; }
+.city-wait { display: grid; place-items: center; color: #555555; }
+
+.city-float-controls { position: absolute; top: 12px; inset-inline-start: 12px; z-index: 3; display: flex; flex-wrap: wrap; gap: 8px; }
+.city-legend { position: absolute; bottom: 12px; inset-inline-start: 12px; z-index: 2; max-width: min(420px, calc(100% - 24px)); background: rgba(255,255,255,0.94); border-radius: 8px; padding: 10px 12px; font-size: 13px; box-shadow: 0 6px 18px -10px rgba(0,0,0,0.4); }
+.city-legend p { margin: 0 0 6px; color: #333333; line-height: 1.45; }
+.city-legend ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.city-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.city-legend i { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+
+.city-card { position: absolute; top: 12px; inset-inline-end: 56px; z-index: 3; width: min(300px, calc(100% - 80px)); background: #FFFFFF; border-radius: 8px; padding: 12px 14px; box-shadow: 0 12px 30px -14px rgba(0,0,0,0.5); font-size: 14px; }
+.city-card h2 { margin: 6px 0 2px; font-size: 18px; font-weight: 500; }
+.city-card p { margin: 4px 0; }
+.city-card a { color: #111111; font-weight: 500; }
+.city-pn { color: #555555; font-size: 13px; }
+.city-x { float: inline-end; border: 0; background: none; font: inherit; font-size: 12px; color: #555555; cursor: pointer; text-decoration: underline; }
+.city-tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; color: #FFFFFF; background: #3D3D3B; }
+.city-tag.planning { background: #4A6FD8; }
+
+.city-summary { position: absolute; top: 0; bottom: 0; inset-inline-end: 0; z-index: 4; width: min(400px, 100%); overflow-y: auto; background: rgba(255,255,255,0.98); padding: 14px 16px 20px; box-shadow: 0 0 40px -12px rgba(0,0,0,0.5); font-size: 14px; }
+.city-summary-head { display: flex; justify-content: space-between; align-items: baseline; }
+.city-summary h2 { margin: 0; font-weight: 300; font-size: 24px; }
+.city-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+.city-stat { border-radius: 8px; padding: 10px; background: #F2F2F0; border-top: 4px solid #3D3D3B; }
+.city-stat.planning { border-top-color: #4A6FD8; }
+.city-stat h3 { margin: 0 0 4px; font-size: 15px; font-weight: 500; }
+.city-stat > b { font-size: 22px; font-weight: 300; }
+.city-stat dl { margin: 8px 0 0; display: grid; grid-template-columns: auto auto; gap: 2px 8px; font-size: 13px; }
+.city-stat dt { color: #555555; }
+.city-stat dd { margin: 0; text-align: end; font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+.city-sub { margin: 16px 0 6px; font-size: 14px; font-weight: 500; }
+.city-bars { display: grid; gap: 6px; }
+.city-bar { display: grid; grid-template-columns: 90px 1fr auto; align-items: center; gap: 8px; font-size: 13px; }
+.city-bar i { display: block; height: 10px; border-radius: 3px; background: #3D3D3B; }
+.city-bar:last-child i { background: #4A6FD8; }
+.city-bar b { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 400; }
+.city-src { color: #555555; font-size: 12px; line-height: 1.5; margin: 8px 0 0; }
+.city-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.city-table th { text-align: start; font-weight: 500; color: #555555; border-bottom: 1px solid #D6D6D4; padding: 4px 2px; }
+.city-table td { border-bottom: 1px solid #ECECEA; padding: 6px 2px; vertical-align: top; }
+.city-table td:last-child { white-space: nowrap; font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+.city-table small { display: block; color: #6E6E6C; font-family: 'IBM Plex Mono', ui-monospace, monospace; unicode-bidi: isolate; }
+.city-link { border: 0; background: none; padding: 0; font: inherit; color: #111111; cursor: pointer; text-align: start; text-decoration: underline; text-underline-offset: 3px; }
+
+@media (max-width: 640px) {
+  .city-head { padding-top: 10px; }
+  .city-head p { font-size: 14px; }
+  .city-stage { height: calc(100vh - 220px); border-radius: 0; }
+  .city-summary { top: auto; width: 100%; max-height: 70%; border-radius: 14px 14px 0 0; }
+  .city-card { inset-inline-end: 12px; top: auto; bottom: 120px; width: calc(100% - 24px); }
+  .city-legend { font-size: 12px; }
+}
