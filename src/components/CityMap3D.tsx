@@ -62,8 +62,8 @@ export default function CityMap3D({ twin, view, color, focus, onPick }: Props) {
 
   useEffect(() => {
     if (!el.current) return
-    // Opening view: the residential plans (a large port or industry plan would zoom the city out).
-    const homes = new Set(twin.plans.filter((p) => p.kind !== 'infrastructure').map((p) => p.plan_number))
+    // Opening view: the plans with homes (the port plan and the city-wide public plots plan would zoom the city out).
+    const homes = new Set(twin.plans.filter((p) => p.kind !== 'infrastructure' && p.units_planned).map((p) => p.plan_number))
     const b =
       bboxOf({ type: 'FeatureCollection', features: twin.boundaries.features.filter((f) => homes.has(f.properties?.plan_number)) }) ??
       bboxOf(twin.boundaries)!
