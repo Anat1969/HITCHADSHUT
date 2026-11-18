@@ -12,3 +12,19 @@ select 'זכויות בנייה במגרשי ציבור בכל העיר', 'publi
  (select jsonb_build_array(round(ST_X(g)::numeric, 6), round(ST_Y(g)::numeric, 6)) from (select ST_Transform(ST_SetSRID(ST_MakePoint(167629, 635245), 2039), 4326) g) c),
  false
 where not exists (select 1 from plan_projects where plan_number = '603-0828491');
+
+-- Source documents, served from public/plans/603-0828491/docs (from the plan folder in Drive).
+insert into plan_media (project_id, kind, url, caption, sort)
+select p.id, v.kind, v.url, v.caption, v.sort from plan_projects p, (values
+ ('drawing','/plans/603-0828491/docs/tashrit.jpg','תשריט מצב מוצע, 1:20,000: הקו הכחול של התוכנית על כל העיר',1),
+ ('document','/plans/603-0828491/docs/horaot.pdf','הוראות התוכנית (17 עמודים)',2),
+ ('document','/plans/603-0828491/docs/tashrit.pdf','תשריט מצב מוצע, בקובץ המקורי',3)
+) as v(kind,url,caption,sort)
+where p.plan_number = '603-0828491' and not exists (select 1 from plan_media m where m.project_id = p.id and m.url = v.url);
+update plan_projects set cover_media_id = (select m.id from plan_media m join plan_projects p on p.id = m.project_id
+  where p.plan_number = '603-0828491' and m.url like '%tashrit.jpg')
+where plan_number = '603-0828491';
+
+-- Model: supabase/seed/603-0828491.model.sql. Story (603-0828491.story.json) and publication:
+-- update plan_projects set story = '<603-0828491.story.json>'::jsonb, published = true where plan_number = '603-0828491';
+-- select plan_builders.build_city_twin();
