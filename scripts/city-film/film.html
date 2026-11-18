@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<title>מודל העיר: סרטון</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@200;300;400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="maplibre-gl.css" />
+<style>
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #ECECEA; font-family: 'Heebo', sans-serif; }
+  #map { position: absolute; inset: 0; }
+  .maplibregl-ctrl-attrib { display: none; }
+  .ov { position: absolute; transition: none; }
+  #brand { top: 44px; right: 56px; display: flex; align-items: center; gap: 14px; color: #111; font-size: 30px; font-weight: 400; }
+  #brand img { width: 48px; height: 48px; border-radius: 11px; box-shadow: 0 3px 10px rgba(0,0,0,.25); }
+  #brand small { font-size: 18px; letter-spacing: .2em; color: #555; }
+  #city { top: 36px; left: 56px; height: 64px; }
+  #title { inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+           background: radial-gradient(ellipse at center, rgba(244,244,242,.92) 0%, rgba(244,244,242,.75) 45%, rgba(244,244,242,0) 75%); }
+  #title h1 { margin: 0; font-weight: 200; font-size: 128px; letter-spacing: -.02em; color: #111; }
+  #title p { margin: 10px 0 0; font-size: 40px; font-weight: 300; color: #333; }
+  #cap { bottom: 72px; right: 56px; max-width: 1100px; background: rgba(255,255,255,.95); border-radius: 14px; padding: 26px 34px 24px;
+         box-shadow: 0 24px 60px -30px rgba(0,0,0,.55); border-right: 10px solid #3D3D3B; }
+  #cap .k { font-size: 24px; letter-spacing: .14em; color: #555; }
+  #cap h2 { margin: 4px 0 0; font-size: 58px; font-weight: 300; color: #111; line-height: 1.1; }
+  #cap p { margin: 10px 0 0; font-size: 32px; color: #222; font-weight: 300; }
+  #cap p b { font-weight: 500; font-family: 'Heebo', sans-serif; }
+  #legend { bottom: 72px; left: 56px; background: rgba(255,255,255,.92); border-radius: 12px; padding: 16px 22px; font-size: 24px; color: #222;
+            display: flex; flex-direction: column; gap: 8px; }
+  #legend div { display: flex; align-items: center; gap: 12px; }
+  #legend i { width: 30px; height: 18px; border-radius: 3px; display: inline-block; }
+  #note { bottom: 22px; right: 56px; font-size: 18px; color: #555; }
+  #end { inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: rgba(244,244,242,.9); }
+  #end h1 { margin: 0; font-size: 76px; font-weight: 300; color: #111; }
+  #end .row { display: flex; gap: 70px; margin: 46px 0 10px; }
+  #end .row div { font-size: 30px; color: #444; }
+  #end .row b { display: block; font-size: 96px; font-weight: 200; color: #111; font-variant-numeric: tabular-nums; }
+  #end .row .plan b { color: #4A6FD8; }
+  #end p { margin: 26px 0 0; font-size: 34px; color: #333; font-weight: 300; }
+  #end .url { margin-top: 40px; font-size: 40px; color: #111; font-weight: 400; direction: ltr; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="brand" class="ov"><img src="favicon.svg" alt="" /><span>מה נבנה סביבי</span><small>אשדוד</small></div>
+<img id="city" class="ov" src="ashdod-logo.png" alt="עיריית אשדוד" />
+<div id="title" class="ov"><h1>מודל העיר</h1><p>מה יש היום, מה כבר אושר, ומה עוד בתכנון</p></div>
+<div id="cap" class="ov"><div class="k"></div><h2></h2><p></p></div>
+<div id="legend" class="ov"></div>
+<div id="note" class="ov">הנפחים: הערכה לפי טבלאות הזכויות בתוכניות · מבנים: OpenStreetMap והמפה העירונית</div>
+<div id="end" class="ov"><h1>מודל אחד, שפה משותפת</h1>
+  <div class="row"><div>דירות במתחמים היום<b id="e1"></b></div><div>אחרי התוכניות המאושרות<b id="e2"></b></div><div class="plan">אחרי כל התוכניות<b id="e3"></b></div></div>
+  <p>לתושבים, למתכננים ולהנהלת העירייה: לראות, להשוות, לשאול</p>
+  <div class="url">ashdod-ma-nivne.vercel.app/city</div></div>
+<script type="module">
+import * as maplibregl from './maplibre-gl.mjs'
+maplibregl.setWorkerUrl('./maplibre-gl-worker.mjs')
+const LAND_USE = await (await fetch('land-use.json')).json()
+const twin = (await (await fetch('twin.json')).json())[0].model
+const STAGE = { approved: '#3D3D3B', planning: '#4A6FD8' }
+const BLUE = '#1D4ED8'
+const homes = twin.boundaries
+const map = new maplibregl.Map({
+  container: 'map', style: 'https://tiles.openfreemap.org/styles/positron', center: [34.65, 31.80], zoom: 13, pitch: 55,
+  interactive: false, attributionControl: false, fadeDuration: 0, canvasContextAttributes: { antialias: true, preserveDrawingBuffer: true },
+})
+const useColor = (fb) => ['match', ['get', 'cat'], ...Object.entries(LAND_USE).flatMap(([k, v]) => [k, v.color]), fb]
+window.__map = map
+map.on('error', (e) => console.log('maperror', e.error?.message || e))
+await new Promise((r) => map.on('load', r))
+console.log('loaded')
+map.setLight({ anchor: 'map', position: [1.4, 215, 35], color: '#FFFFFF', intensity: 0.42 })
+for (const id of ['context', 'demolish', 'massing', 'boundaries']) map.addSource(id, { type: 'geojson', data: twin[id] })
+// The whole city from OpenStreetMap, except inside the plans' blue lines (there the city GIS buildings are used).
+map.addLayer({ id: 'osm-buildings', type: 'fill-extrusion', source: 'openmaptiles', 'source-layer': 'building', minzoom: 12,
+  filter: ['!', ['within', homes]],
+  paint: { 'fill-extrusion-color': '#D9D9D7', 'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 9], 'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0], 'fill-extrusion-opacity': 0.9 } })
+map.addLayer({ id: 'context', type: 'fill-extrusion', source: 'context', filter: ['!', ['within', homes]],
+  paint: { 'fill-extrusion-color': '#D2D2D0', 'fill-extrusion-height': ['get', 'h'], 'fill-extrusion-opacity': 0.9, 'fill-extrusion-vertical-gradient': true } })
+map.addLayer({ id: 'demolish', type: 'fill-extrusion', source: 'demolish',
+  paint: { 'fill-extrusion-color': '#9A9A98', 'fill-extrusion-height': ['get', 'h'], 'fill-extrusion-opacity': 0.95, 'fill-extrusion-vertical-gradient': true } })
+map.addLayer({ id: 'b-fill', type: 'fill', source: 'boundaries', paint: { 'fill-color': BLUE, 'fill-opacity': 0.07 } })
+map.addLayer({ id: 'b-line', type: 'line', source: 'boundaries', filter: ['==', ['get', 'stage'], 'approved'], paint: { 'line-color': BLUE, 'line-width': 2.6 } })
+map.addLayer({ id: 'b-line-p', type: 'line', source: 'boundaries', filter: ['==', ['get', 'stage'], 'planning'], paint: { 'line-color': BLUE, 'line-width': 2.6, 'line-dasharray': [3, 2] } })
+for (const s of ['approved', 'planning'])
+  map.addLayer({ id: 'm-' + s, type: 'fill-extrusion', source: 'massing', filter: ['==', ['get', 'stage'], s],
+    paint: { 'fill-extrusion-color': STAGE[s], 'fill-extrusion-height': 0, 'fill-extrusion-base': 0, 'fill-extrusion-opacity': s === 'approved' ? 0.96 : 0.8, 'fill-extrusion-vertical-gradient': true } })
+
+const $ = (s) => document.querySelector(s)
+const fmt = (n) => Math.round(n).toLocaleString('he-IL')
+// One frame of the film: camera, growth of each stage (and of the example plan), colours and texts.
+window.film = {
+  ready: true,
+  plans: twin.plans,
+  set(st) {
+    map.jumpTo(st.cam)
+    const f = st.focus
+      ? ['case', ['==', ['get', 'plan_number'], st.focus], st.gf, ['match', ['get', 'stage'], 'approved', st.a, st.p]]
+      : ['match', ['get', 'stage'], 'approved', st.a, st.p]
+    for (const id of ['m-approved', 'm-planning']) {
+      map.setPaintProperty(id, 'fill-extrusion-height', ['*', ['get', 'top'], f])
+      map.setPaintProperty(id, 'fill-extrusion-base', ['*', ['coalesce', ['get', 'base'], 0], f])
+      map.setPaintProperty(id, 'fill-extrusion-color', st.useColors ? useColor(STAGE[id.slice(2)]) : STAGE[id.slice(2)])
+    }
+    map.setPaintProperty('demolish', 'fill-extrusion-height', ['*', ['get', 'h'], ['-', 1, f]])
+    $('#title').style.opacity = st.titleO ?? 0
+    $('#end').style.opacity = st.endO ?? 0
+    $('#cap').style.opacity = st.capO ?? 0
+    $('#legend').style.opacity = st.legO ?? 0
+    if (st.cap) {
+      $('#cap .k').textContent = st.cap.k
+      $('#cap h2').textContent = st.cap.h
+      $('#cap p').innerHTML = st.cap.p
+      $('#cap').style.borderRightColor = st.cap.c || '#3D3D3B'
+    }
+    $('#legend').innerHTML = (st.legend || []).map(([c, l]) => `<div><i style="background:${c}"></i>${l}</div>`).join('')
+    if (st.end) { $('#e1').textContent = fmt(st.end[0]); $('#e2').textContent = fmt(st.end[1]); $('#e3').textContent = fmt(st.end[2]) }
+  },
+  idle: () => new Promise((r) => (map.loaded() && map.areTilesLoaded() ? requestAnimationFrame(() => requestAnimationFrame(r)) : map.once('idle', () => requestAnimationFrame(r)))),
+  bbox(pn) {
+    let b = [180, 90, -180, -90]
+    for (const f of twin.boundaries.features.filter((f) => f.properties.plan_number === pn))
+      for (const ring of f.geometry.type === 'Polygon' ? f.geometry.coordinates : f.geometry.coordinates.flat())
+        for (const [x, y] of ring) b = [Math.min(b[0], x), Math.min(b[1], y), Math.max(b[2], x), Math.max(b[3], y)]
+    return b
+  },
+  camFor(b, pad, pitch, bearing) { const c = map.cameraForBounds([[b[0], b[1]], [b[2], b[3]]], { padding: pad, pitch, bearing }); return { center: c.center.toArray(), zoom: c.zoom } },
+}
+</script>
+</body>
+</html>

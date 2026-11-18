@@ -50,6 +50,7 @@ export default function CityTwin() {
   const [picked, setPicked] = useState<string | null>(params.get('focus'))
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [full, setFull] = useState(false)
+  const [film, setFilm] = useState(false)
   const stageRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -141,8 +142,22 @@ export default function CityTwin() {
           <button type="button" className="city-btn" onClick={toggleFull}>
             {full ? 'יציאה ממסך מלא' : 'מסך מלא'}
           </button>
+          <button type="button" className="city-btn" onClick={() => setFilm(true)}>
+            סרטון
+          </button>
         </div>
       </header>
+      {film && (
+        <div className="city-film" role="dialog" aria-label="סרטון מודל העיר" onClick={() => setFilm(false)}>
+          <video src="/media/city-film.mp4" controls autoPlay playsInline onClick={(e) => e.stopPropagation()} />
+          <div className="city-film-bar" onClick={(e) => e.stopPropagation()}>
+            <a href="/media/city-film.mp4" download="מודל-העיר-אשדוד.mp4">הורדת הסרטון</a>
+            <button type="button" onClick={() => setFilm(false)}>
+              סגירה
+            </button>
+          </div>
+        </div>
+      )}
 
       <div ref={stageRef} className={`city-stage${full ? ' is-full' : ''}`}>
         {twin ? (
