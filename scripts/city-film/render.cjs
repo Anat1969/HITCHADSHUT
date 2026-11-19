@@ -101,7 +101,7 @@ function timeline(plans, camAll, camEx) {
   await page.waitForFunction(() => window.film?.ready, null, { timeout: Number(process.env.FILM_TIMEOUT || 120000) })
   await page.evaluate(() => document.fonts.ready)
   const { plans, camAll, camEx } = await page.evaluate((ex) => {
-    const homes = window.film.plans.filter((p) => p.kind !== 'infrastructure').map((p) => window.film.bbox(p.plan_number))
+    const homes = window.film.plans.filter((p) => p.kind !== 'infrastructure' && p.units_planned).map((p) => window.film.bbox(p.plan_number))
     const b = homes.reduce((a, c) => [Math.min(a[0], c[0]), Math.min(a[1], c[1]), Math.max(a[2], c[2]), Math.max(a[3], c[3])])
     return { plans: window.film.plans, camAll: window.film.camFor(b, 160, 52, 0), camEx: window.film.camFor(window.film.bbox(ex), 260, 60, -10) }
   }, EXAMPLE)
