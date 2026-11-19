@@ -14,6 +14,7 @@ const OUT = path.resolve(process.argv[2] || 'city-film.mp4')
 const arg = (k, d) => Number((process.argv.find((a) => a.startsWith(`--${k}=`)) || '').split('=')[1] || d)
 const FPS = 30
 const EXAMPLE = 'תמל/2021'
+const PUBLIC = '603-0828491' // the public plots plan, shown in its own segment
 
 // --- static files for the page ------------------------------------------------------------------
 const WORK = fs.mkdtempSync(path.join(require('os').tmpdir(), 'city-film-'))
@@ -55,33 +56,39 @@ function timeline(plans, camAll, camEx) {
   const aE = sum(A, 'units_existing'), aP = sum(A, 'units_planned'), pE = sum(P, 'units_existing'), pP = sum(P, 'units_planned')
   const ex = plans.find((p) => p.plan_number === EXAMPLE)
   const lu = (k) => [LAND_USE[k].color, LAND_USE[k].label]
-  const DUR = 48
+  const DUR = 76
+  // Segments are timed to the narration (scripts/city-film/narration.json).
   const frame = (t) => {
-    // Camera: overview orbit, fly to the example, orbit it, back out.
-    const orbit = lerp(-34, 12, clamp(t / 27))
+    // Camera: overview orbit, fly to the example, orbit it, back out, slow orbit over the public buildings.
+    const orbit = lerp(-34, 12, clamp(t / 31))
     let cam = { center: camAll.center, zoom: camAll.zoom - 0.35 * (1 - ramp(t, 0, 6)), pitch: 52, bearing: orbit }
-    if (t > 27) {
-      const k = ramp(t, 27, 31), back = ramp(t, 39, 42.5)
-      const exBearing = lerp(-28, 6, clamp((t - 31) / 8))
+    if (t > 31) {
+      const k = ramp(t, 31, 35), back = ramp(t, 45.5, 49)
+      const exBearing = lerp(-28, 6, clamp((t - 35) / 9))
       const fly = { center: [lerp(camAll.center[0], camEx.center[0], k), lerp(camAll.center[1], camEx.center[1], k)], zoom: lerp(camAll.zoom, camEx.zoom, k), pitch: lerp(52, 60, k), bearing: lerp(12, exBearing, k) }
-      cam = back > 0 ? { center: [lerp(fly.center[0], camAll.center[0], back), lerp(fly.center[1], camAll.center[1], back)], zoom: lerp(fly.zoom, camAll.zoom - 0.2, back), pitch: lerp(60, 50, back), bearing: lerp(fly.bearing, 14, back) } : fly
+      const outBearing = lerp(14, 34, clamp((t - 49) / 16))
+      cam = back > 0 ? { center: [lerp(fly.center[0], camAll.center[0], back), lerp(fly.center[1], camAll.center[1], back)], zoom: lerp(fly.zoom, camAll.zoom - 0.2, back), pitch: lerp(60, 50, back), bearing: lerp(fly.bearing, outBearing, back) } : fly
     }
     const a = ramp(t, 11.5, 16.5)
-    const p = ramp(t, 19.5, 24.5)
+    const p = ramp(t, 23.5, 28.5)
     // The example plan sinks back to today while the camera flies in, then rises again.
-    const gf = t < 27 ? a : Math.max(1 - ramp(t, 27.5, 29.5), ramp(t, 32.5, 37.5))
-    const st = { cam, a, p, focus: EXAMPLE, gf, useColors: t > 27 && t < 42, titleO: 1 - ramp(t, 3.2, 4.2), endO: ramp(t, 42.2, 43.4), legO: 0, capO: 0 }
+    const gf = t < 31 ? a : Math.max(1 - ramp(t, 31.5, 33.5), ramp(t, 36.5, 41.5))
+    const st = { cam, a, p, focus: EXAMPLE, gf, useColors: t > 31 && t < 65, titleO: 1 - ramp(t, 3.2, 4.2), endO: ramp(t, 65.2, 66.4), legO: 0, capO: 0 }
+    const uses = ['residential', 'commerce', 'public', 'open'].filter((k) => LAND_USE[k]).map(lu)
     if (t >= 4.2 && t < 11) Object.assign(st, { capO: fade(t, 4.4, 11), cap: { k: 'היום', h: 'כך נראית העיר היום', p: `${plans.length} תוכניות, כל אחת בקו הכחול שלה` } })
-    if (t >= 11 && t < 19) Object.assign(st, { capO: fade(t, 11.1, 19), legO: fade(t, 11.1, 27), cap: { k: 'מאושר', h: `${A.length} תוכניות שכבר אושרו`, p: `<b>${fmt(aE)}</b> דירות היום ← <b>${fmt(aP)}</b> דירות לפי התוכניות` } })
-    if (t >= 19 && t < 27) Object.assign(st, { capO: fade(t, 19.1, 27), legO: fade(t, 11.1, 27), cap: { k: 'בתכנון', h: `ועוד ${P.length} תוכניות בתכנון`, p: `<b>${fmt(pE)}</b> דירות היום ← <b>${fmt(pP)}</b> דירות, והן עוד יכולות להשתנות`, c: '#4A6FD8' } })
-    if (t >= 11 && t < 27) st.legend = [['#D2D2D0', 'מבנים היום'], ['#3D3D3B', 'מאושר'], ['#4A6FD8', 'בתכנון']]
-    if (t >= 29 && t < 41.5) {
-      const rising = t > 32.5
-      Object.assign(st, { capO: fade(t, 29.3, 41.5), legO: fade(t, 33, 41.5), legend: ['residential', 'commerce', 'public', 'open'].filter((k) => LAND_USE[k]).map(lu),
+    if (t >= 11 && t < 23) Object.assign(st, { capO: fade(t, 11.1, 23), legO: fade(t, 11.1, 31), cap: { k: 'מאושר', h: `${A.length} תוכניות שכבר אושרו`, p: `<b>${fmt(aE)}</b> דירות היום ← <b>${fmt(aP)}</b> דירות לפי התוכניות` } })
+    if (t >= 23 && t < 31) Object.assign(st, { capO: fade(t, 23.1, 31), legO: fade(t, 11.1, 31), cap: { k: 'בתכנון', h: `ועוד ${P.length} תוכניות בתכנון`, p: `<b>${fmt(pE)}</b> דירות היום ← <b>${fmt(pP)}</b> דירות, והן עוד יכולות להשתנות`, c: '#4A6FD8' } })
+    if (t >= 11 && t < 31) st.legend = [['#D2D2D0', 'מבנים היום'], ['#3D3D3B', 'מאושר'], ['#4A6FD8', 'בתכנון']]
+    if (t >= 33 && t < 46.5) {
+      const rising = t > 36.5
+      Object.assign(st, { capO: fade(t, 33.3, 46.5), legO: fade(t, 37, 46.5), legend: uses,
         cap: { k: `דוגמה · תוכנית ${EXAMPLE}`, h: ex.title, p: rising ? `<b>${fmt(ex.units_existing)}</b> דירות היום ← <b>${fmt(ex.units_planned)}</b> דירות, עם מבני ציבור, מסחר ושטח פתוח` : `היום: <b>${fmt(ex.units_existing)}</b> דירות בבנייני שיכון` } })
     }
-    if (t >= 42) {
-      const k = ramp(t, 42.5, 45.5)
+    if (t >= 49.5 && t < 64.5)
+      Object.assign(st, { capO: fade(t, 49.6, 64.5), legO: fade(t, 49.6, 64.5), legend: uses,
+        cap: { k: `מבני ציבור · תוכנית ${PUBLIC}`, h: 'יותר מבני ציבור על אותה קרקע', p: `בכל מגרש ציבורי: עד <b>4</b> קומות, ותכסית שעולה מ-50% ל-<b>60%</b>. במודל: כ-<b>490</b> מגרשים (הערכה)` } })
+    if (t >= 65) {
+      const k = ramp(t, 65.5, 68.5)
       st.end = [aE + pE, lerp(aE + pE, aP + pE, k), lerp(aE + pE, aP + pP, k)]
     }
     return st
@@ -118,7 +125,8 @@ function timeline(plans, camAll, camEx) {
   }
   await browser.close()
   server.close()
-  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(FPS / step), '-i', path.join(frames, 'f%05d.jpg'), '-c:v', 'libx264', '-preset', 'slow', '-crf', '28', '-tune', 'animation', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', OUT])
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(FPS / step), '-i', path.join(frames, 'f%05d.jpg'), '-c:v', 'libx264', '-preset', 'slow', '-crf', process.env.FILM_CRF || '31', '-tune', 'animation', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', OUT])
+  if (!process.env.NO_NARRATION) execFileSync('python3', ['-I', path.join(__dirname, 'narration.py'), OUT], { stdio: 'inherit' })
   console.log(`wrote ${OUT} (${n} frames, ${(fs.statSync(OUT).size / 1e6).toFixed(1)} MB), frames in ${frames}`)
 })().catch((e) => {
   console.error(e)
