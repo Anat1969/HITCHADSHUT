@@ -1,7 +1,9 @@
 -- full_model: a tower and a mid-rise building on one lot, and towers that start on their podium (ענת, 22.11.2026).
 --   table 5 may give "midrise_floors" for a lot whose plan allows a tower and a מרקמי building (תמל/2023, lot 3):
---   the above-ground area is spread over both at one typical floor, and the mid-rise stands in the envelope
---   at least 13 m from the tower line. Both are estimates.
+--   the above-ground area is spread over both at one typical floor. The tower is a compact footprint at the end of
+--   its tower line farthest from the plan's other towers, and the mid-rise stands in the rest of the envelope, at
+--   least 13 m from the tower (the plan's minimum distance between a tower and a מרקמי building). Both are estimates.
+--   Also fixes a mixed-use lot with a tower line but no podium_floors, which had no commercial ground floor.
 --   A tower over a podium (podium_floors) now starts at the podium roof instead of the ground.
 create or replace function plan_builders.full_model(p_plan_number text, p_lots jsonb, p_t5 jsonb, p_source text default null,
                                                     p_envelopes jsonb default null)
@@ -68,10 +70,10 @@ begin
            coalesce(ST_SimplifyPreserveTopology(ST_Intersection(e.g, geo.g), 0.2), geo.g) env,
            e.g is not null has_lines,
            ST_SimplifyPreserveTopology(ST_Intersection(tl.g, geo.g), 0.2) tline,
-           -- a lot with a tower and a mid-rise building (midrise_floors in table 5): the mid-rise stands in the
-           -- envelope at least 13 m from the tower line (the usual distance between a tower and a מרקמי building)
-           case when t5.midrise_floors > 0 and tl.g is not null
-                then ST_Difference(coalesce(ST_Intersection(e.g, geo.g), geo.g), ST_Buffer(ST_Intersection(tl.g, geo.g), 13)) end mid
+           -- a tower and a mid-rise building on one lot (midrise_floors in table 5)
+           t5.midrise_floors > 0 and tl.g is not null has_mid,
+           -- the other towers of the plan: the tower of a two-building lot goes to the end of its line farthest from them
+           (select ST_Centroid(ST_Union(o.g)) from lines o where o.kind = 'tower' and o.lot <> t5.lot) others
     from t5 join geo using (lot)
     join cats on cats.lot = t5.lot
     left join lines e on e.lot = t5.lot and e.kind = 'envelope'
@@ -86,20 +88,35 @@ begin
              coalesce((nullif(coalesce(main_above, 0) + coalesce(service_above, 0), 0)
                        - case when tline is not null and podium_floors > 0
                               then podium_floors * least(geo_area * coalesce(coverage_pct, 100) / 100, ST_Area(env)) else 0 end)
-                      / nullif(floors_above - case when tline is not null and podium_floors > 0 then podium_floors else 0 end + case when mid is not null then midrise_floors else 0 end, 0),
+                      / nullif(floors_above - case when tline is not null and podium_floors > 0 then podium_floors else 0 end + case when has_mid then midrise_floors else 0 end, 0),
                       (total_area - case when tline is not null and podium_floors > 0
                               then podium_floors * least(geo_area * coalesce(coverage_pct, 100) / 100, ST_Area(env)) else 0 end)
-                      / nullif(floors_above - case when tline is not null and podium_floors > 0 then podium_floors else 0 end + case when mid is not null then midrise_floors else 0 end, 0),
+                      / nullif(floors_above - case when tline is not null and podium_floors > 0 then podium_floors else 0 end + case when has_mid then midrise_floors else 0 end, 0),
                       geo_area * coalesce(coverage_pct, 60) / 100),
              geo_area * coalesce(coverage_pct, 100) / 100,
              coalesce(max_floor_m2, 'Infinity'::numeric),
              ST_Area(coalesce(tline, env)) * 0.98)::numeric plate
     from lots0 l
+  ), lots2 as (
+    -- a lot with a tower and a mid-rise building (midrise_floors in table 5, estimate): the tower is a compact
+    -- footprint at one end of the tower line, and the mid-rise stands in the rest of the envelope, 13 m from it
+    select l.*, t.tower_fp, case when t.tower_fp is not null then ST_Difference(env, ST_Buffer(t.tower_fp, 13)) end mid
+    from lots l
+    left join lateral (
+      select plan_builders.inset_to_area(ST_Intersection(l.tline,
+               ST_Buffer(ST_LineInterpolatePoint(ax, least(0.5, sqrt(l.plate) / greatest(ST_Length(ax), 1))), sqrt(l.plate), 'endcap=square')),
+             l.plate) tower_fp
+      from (select case when l.others is not null
+                          and ST_Distance(ST_EndPoint(ln), l.others) > ST_Distance(ST_StartPoint(ln), l.others)
+                        then ST_Reverse(ln) else ln end ax
+            from (select ST_LongestLine(l.tline, l.tline) ln) a) b
+      where l.has_mid
+    ) t on true
   ), massing as (
     select jsonb_build_object('type', 'Feature',
              'properties', jsonb_build_object('lot', lot, 'kind', 'envelope', 'base', 0, 'top', top, 'cat', cat),
              'geometry', ST_AsGeoJSON(ST_ReducePrecision(ST_Transform(env, 4326), 0.000001))::jsonb) f
-    from lots where top > 0
+    from lots2 where top > 0
     union all
     select jsonb_build_object('type', 'Feature',
              'properties', jsonb_build_object('lot', lot, 'kind', 'tower', 'top', top,
@@ -109,21 +126,21 @@ begin
                'base', case when tline is not null and podium_floors > 0 then podium_floors * 4.5
                             when cat = 'mixed' and top > 9 then 4.5 else 0 end),
              'geometry', ST_AsGeoJSON(ST_ReducePrecision(ST_Transform(
-               plan_builders.inset_to_area(coalesce(tline, env), plate), 4326), 0.000001))::jsonb)
-    from lots where top > 0 and plate > 0
+               coalesce(tower_fp, plan_builders.inset_to_area(coalesce(tline, env), plate)), 4326), 0.000001))::jsonb)
+    from lots2 where top > 0 and plate > 0
     union all
     select jsonb_build_object('type', 'Feature',
              'properties', jsonb_build_object('lot', lot, 'kind', 'podium', 'base', 0, 'top', podium_floors * 4.5,
                'cat', case when cat = 'mixed' then 'commerce' else cat end),
              'geometry', ST_AsGeoJSON(ST_ReducePrecision(ST_Transform(
                plan_builders.inset_to_area(env, (geo_area * coalesce(coverage_pct, 100) / 100)::numeric), 4326), 0.000001))::jsonb)
-    from lots where tline is not null and podium_floors > 0
+    from lots2 where tline is not null and podium_floors > 0
     union all
     select jsonb_build_object('type', 'Feature',
              'properties', jsonb_build_object('lot', lot, 'kind', 'podium', 'base', 0, 'top', 4.5, 'cat', 'commerce'),
              'geometry', ST_AsGeoJSON(ST_ReducePrecision(ST_Transform(
-               plan_builders.inset_to_area(coalesce(tline, env), plate), 4326), 0.000001))::jsonb)
-    from lots where cat = 'mixed' and not (tline is not null and podium_floors > 0) and top > 9 and plate > 0
+               coalesce(tower_fp, plan_builders.inset_to_area(coalesce(tline, env), plate)), 4326), 0.000001))::jsonb)
+    from lots2 where cat = 'mixed' and not coalesce(tline is not null and podium_floors > 0, false) and top > 9 and plate > 0
     union all
     -- the mid-rise building next to the tower: same typical floor, midrise_floors floors (estimate)
     select jsonb_build_object('type', 'Feature',
@@ -133,13 +150,13 @@ begin
                'top', case when cat = 'mixed' then 4.5 else 0 end + midrise_floors * 3.3),
              'geometry', ST_AsGeoJSON(ST_ReducePrecision(ST_Transform(
                plan_builders.inset_to_area(mid, least(plate, ST_Area(mid) * 0.98)::numeric), 4326), 0.000001))::jsonb)
-    from lots where mid is not null and ST_Area(mid) > 50 and plate > 0
+    from lots2 where mid is not null and ST_Area(mid) > 50 and plate > 0
     union all
     select jsonb_build_object('type', 'Feature',
              'properties', jsonb_build_object('lot', lot, 'kind', 'podium', 'part', 'midrise', 'base', 0, 'top', 4.5, 'cat', 'commerce'),
              'geometry', ST_AsGeoJSON(ST_ReducePrecision(ST_Transform(
                plan_builders.inset_to_area(mid, least(plate, ST_Area(mid) * 0.98)::numeric), 4326), 0.000001))::jsonb)
-    from lots where mid is not null and ST_Area(mid) > 50 and plate > 0 and cat = 'mixed'
+    from lots2 where mid is not null and ST_Area(mid) > 50 and plate > 0 and cat = 'mixed'
   ), demolish as (
     select b.g, b.h from plan_builders.city_buildings(v_blue) b
     where ST_Within(ST_PointOnSurface(b.g), v_blue)
@@ -178,7 +195,7 @@ begin
         'note', concat_ws(' ', 'לפי התוכנית: ' || coalesce(ref, 'טבלה 5') || '.',
                  case when has_lines then 'המעטפת בתלת-ממד לפי קווי הבניין בתשריט ועד הגובה המרבי.' else 'המעטפת בתלת-ממד היא כל המגרש, כי קווי הבניין לא זוהו בתשריט.' end,
                  'הבניין בתוכה הוא הערכה: שטח הקומה הוא השטח מעל הקרקע חלקי מספר הקומות.',
-                 case when mid is not null then 'במגרש מגדל ומבנה מרקמי של עד ' || midrise_floors || ' קומות, במרחק 13 מ'' לפחות מהמגדל (הערכה).' end))
+                 case when has_mid then 'במגרש מגדל ומבנה מרקמי של עד ' || midrise_floors || ' קומות, במרחק 13 מ'' לפחות מהמגדל (הערכה).' end))
         order by lot) from lots), '[]'::jsonb),
     'massing', jsonb_build_object('type', 'FeatureCollection', 'features', coalesce((select jsonb_agg(f) from massing), '[]'::jsonb)),
     'parcels', jsonb_build_object('type', 'FeatureCollection', 'features', coalesce((select jsonb_agg(jsonb_build_object(
