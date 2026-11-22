@@ -153,12 +153,20 @@ export default function CityMap3D({ twin, view, color, focus, onPick }: Props) {
           },
         })
       }
-      const pick = (e: maplibregl.MapLayerMouseEvent) => {
-        const pn = e.features?.[0]?.properties?.plan_number
+      // Overlapping plans (a city-wide plan contains the others): pick the volume under the cursor, else the smallest boundary.
+      const area = (pn: string) => {
+        const b = bboxOf({ type: 'FeatureCollection', features: twin.boundaries.features.filter((f) => f.properties?.plan_number === pn) })
+        return b ? (b[2] - b[0]) * (b[3] - b[1]) : Infinity
+      }
+      const pick = (e: maplibregl.MapMouseEvent) => {
+        const hits = map.queryRenderedFeatures(e.point, { layers: ['massing-approved', 'massing-planning', 'boundary-fill'] })
+        const vol = hits.find((f) => f.layer.id !== 'boundary-fill')
+        const pns = hits.map((f) => String(f.properties?.plan_number ?? '')).filter(Boolean)
+        const pn = vol?.properties?.plan_number ?? pns.sort((a, b) => area(a) - area(b))[0]
         if (pn) pickRef.current(String(pn))
       }
+      map.on('click', pick)
       for (const id of ['massing-approved', 'massing-planning', 'boundary-fill']) {
-        map.on('click', id, pick)
         map.on('mouseenter', id, () => (map.getCanvas().style.cursor = 'pointer'))
         map.on('mouseleave', id, () => (map.getCanvas().style.cursor = ''))
       }

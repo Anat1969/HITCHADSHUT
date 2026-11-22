@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react'
-import { Circle, CircleMarker, GeoJSON, MapContainer, Marker, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet'
+import { Circle, CircleMarker, GeoJSON, MapContainer, Marker, Pane, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import type { FeatureCollection } from 'geojson'
 import 'leaflet/dist/leaflet.css'
@@ -8,6 +8,14 @@ import { BLUE_LINE } from '../lib/labels'
 import { ASHDOD_BOUNDS, ASHDOD_CENTER, bboxOf } from '../lib/geo'
 
 const meIcon = L.divIcon({ className: '', html: '<div class="me-pin"></div>', iconSize: [18, 18], iconAnchor: [9, 9] })
+
+// Plans larger than this (bbox, square degrees, about 2 x 2 km) are drawn in a pane behind the others:
+// a city-wide plan (public plots) or the port plan would otherwise cover the blue lines of the plans inside them.
+const BIG_PLAN = 4e-4
+const bboxArea = (p: Pick<Project, 'geojson'>) => {
+  const b = p.geojson ? bboxOf(p.geojson) : null
+  return b ? (b[2] - b[0]) * (b[3] - b[1]) : 0
+}
 
 export type MapFocus =
   | { type: 'project'; project: Pick<Project, 'id' | 'geojson' | 'center'>; nonce: number }
@@ -42,6 +50,11 @@ export default function MapView({
   draftPin,
   interactiveTooltips = true,
 }: Props) {
+  // Large plans behind, then the rest from large to small, so a small plan is never hidden under a bigger one.
+  const [back, front] = useMemo(() => {
+    const sorted = [...projects].sort((a, b) => bboxArea(b) - bboxArea(a))
+    return [sorted.filter((p) => bboxArea(p) > BIG_PLAN), sorted.filter((p) => bboxArea(p) <= BIG_PLAN)]
+  }, [projects])
   return (
     <MapContainer
       center={ASHDOD_CENTER}
@@ -65,7 +78,21 @@ export default function MapView({
       <FocusController focus={focus ?? null} />
       {onMapClick && <ClickCatcher onClick={onMapClick} />}
 
-      {projects.map((p) => (
+      <Pane name="plans-back" style={{ zIndex: 390 }}>
+        {back.map((p) => (
+          <ProjectLayer
+            key={p.id}
+            project={p}
+            selected={p.id === selectedId}
+            hovered={p.id === hoverId}
+            dimmed={!!selectedId && p.id !== selectedId}
+            onSelect={onSelect}
+            onHover={onHover}
+            tooltip={interactiveTooltips}
+          />
+        ))}
+      </Pane>
+      {front.map((p) => (
         <ProjectLayer
           key={p.id}
           project={p}
