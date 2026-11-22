@@ -177,7 +177,8 @@ begin
           ) s),
         'note', concat_ws(' ', 'לפי התוכנית: ' || coalesce(ref, 'טבלה 5') || '.',
                  case when has_lines then 'המעטפת בתלת-ממד לפי קווי הבניין בתשריט ועד הגובה המרבי.' else 'המעטפת בתלת-ממד היא כל המגרש, כי קווי הבניין לא זוהו בתשריט.' end,
-                 'הבניין בתוכה הוא הערכה: שטח הקומה הוא השטח מעל הקרקע חלקי מספר הקומות.'))
+                 'הבניין בתוכה הוא הערכה: שטח הקומה הוא השטח מעל הקרקע חלקי מספר הקומות.',
+                 case when mid is not null then 'במגרש מגדל ומבנה מרקמי של עד ' || midrise_floors || ' קומות, במרחק 13 מ'' לפחות מהמגדל (הערכה).' end))
         order by lot) from lots), '[]'::jsonb),
     'massing', jsonb_build_object('type', 'FeatureCollection', 'features', coalesce((select jsonb_agg(f) from massing), '[]'::jsonb)),
     'parcels', jsonb_build_object('type', 'FeatureCollection', 'features', coalesce((select jsonb_agg(jsonb_build_object(
