@@ -55,3 +55,8 @@
 
 /* כתבות: בטלפון, בעמוד פנימי שיש בו גם "דף הבית", הכפתור מוסתר כדי שהסרגל לא יגלוש. מדף הבית הוא תמיד גלוי. */
 @media (max-width: 480px) { .tb-articles-inner { display: none; } }
+
+/* icon-only button (the city film, on /city) */
+.tb-icon { display: inline-grid; place-items: center; width: 32px; padding: 0; }
+/* Narrow phones, inner pages: the app icon alone links home (the "דף הבית" button is there too), so the bar fits. */
+@media (max-width: 480px) { .tb-inner .tb-brand span { display: none; } .tb-icon { width: 28px; } }
