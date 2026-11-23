@@ -1,11 +1,20 @@
 import { useEffect, useMemo } from 'react'
-import { Circle, CircleMarker, GeoJSON, MapContainer, Marker, Pane, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet'
+import { Circle, CircleMarker, GeoJSON, MapContainer, Marker, Pane, Popup, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
-import type { FeatureCollection } from 'geojson'
+import type { Feature, FeatureCollection } from 'geojson'
 import 'leaflet/dist/leaflet.css'
 import type { LonLat, Project } from '../lib/types'
 import { BLUE_LINE } from '../lib/labels'
+import { BUILDING_COLOR, PLANS_APP_URL, fmtDate, type BuildingPlan } from '../lib/buildingPlans'
 import { ASHDOD_BOUNDS, ASHDOD_CENTER, bboxOf } from '../lib/geo'
+
+// The red arrow that points at the plan in focus, and slides from plan to plan (css transition on .plan-arrow).
+const arrowIcon = L.divIcon({
+  className: 'plan-arrow',
+  html: '<svg viewBox="0 0 24 36" width="24" height="36" aria-hidden="true"><path d="M12 35 L2 18 H8 V1 H16 V18 H22 Z" fill="#D0202A" stroke="#FFFFFF" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  iconSize: [24, 36],
+  iconAnchor: [12, 36],
+})
 
 const meIcon = L.divIcon({ className: '', html: '<div class="me-pin"></div>', iconSize: [18, 18], iconAnchor: [9, 9] })
 
@@ -35,6 +44,10 @@ interface Props {
   onMapClick?: (p: LonLat) => void
   draftPin?: LonLat | null
   interactiveTooltips?: boolean
+  /** Building plans from PLANS-GH, drawn in bronze; null hides them. */
+  buildingPlans?: BuildingPlan[] | null
+  /** Hide the urban renewal plans (the map shows building plans only). */
+  hideProjects?: boolean
 }
 
 export default function MapView({
@@ -49,12 +62,24 @@ export default function MapView({
   onMapClick,
   draftPin,
   interactiveTooltips = true,
+  buildingPlans = null,
+  hideProjects = false,
 }: Props) {
   // Large plans behind, then the rest from large to small, so a small plan is never hidden under a bigger one.
+  const shown = hideProjects ? [] : projects
+  // The arrow: the plan under the pointer, else the one selected or flown to.
+  const arrowAt = useMemo(() => {
+    const id = hoverId ?? selectedId ?? (focus?.type === 'project' ? focus.project.id : null)
+    const p = id ? projects.find((x) => x.id === id) : null
+    if (!p) return null
+    const b = p.geojson ? bboxOf(p.geojson) : null
+    // the tip touches the top of the blue line, so the arrow never hides the plan
+    return b ? ([b[3], (b[0] + b[2]) / 2] as [number, number]) : p.center ? ([p.center[1], p.center[0]] as [number, number]) : null
+  }, [hoverId, selectedId, focus, projects])
   const [back, front] = useMemo(() => {
-    const sorted = [...projects].sort((a, b) => bboxArea(b) - bboxArea(a))
+    const sorted = [...shown].sort((a, b) => bboxArea(b) - bboxArea(a))
     return [sorted.filter((p) => bboxArea(p) > BIG_PLAN), sorted.filter((p) => bboxArea(p) <= BIG_PLAN)]
-  }, [projects])
+  }, [shown])
   return (
     <MapContainer
       center={ASHDOD_CENTER}
@@ -104,6 +129,11 @@ export default function MapView({
           tooltip={interactiveTooltips}
         />
       ))}
+
+      {buildingPlans?.map((bp) => (
+        <BuildingLayer key={bp.plan_number} plan={bp} />
+      ))}
+      {arrowAt && <Marker position={arrowAt} icon={arrowIcon} interactive={false} zIndexOffset={1000} />}
 
       {me && (
         <>
@@ -236,10 +266,10 @@ function ProjectLayer({
           )}
         </GeoJSON>
       )}
-      {project.center && (
+      {project.center && !hasShapes && (
         <CircleMarker
           center={[project.center[1], project.center[0]]}
-          radius={emphasis ? 9 : hasShapes ? 5 : 8}
+          radius={emphasis ? 9 : 7}
           pathOptions={{
             color: '#fff',
             weight: 2,
@@ -256,5 +286,38 @@ function ProjectLayer({
         </CircleMarker>
       )}
     </>
+  )
+}
+
+/** A building plan (תב/) from PLANS-GH: its lots in bronze, a thin dashed line, and a card with the committee decision. */
+function BuildingLayer({ plan }: { plan: BuildingPlan }) {
+  const style = { color: BUILDING_COLOR, weight: 1.6, dashArray: '4 3', fillColor: BUILDING_COLOR, fillOpacity: 0.16 }
+  const card = (
+    <Popup className="bp-pop">
+      <b>{plan.title}</b>
+      <span>
+        תוכנית בינוי {plan.plan_number.replace('תב/', '')}
+        {plan.underlying_plan ? ` · לפי תוכנית ${plan.underlying_plan}` : ''}
+      </span>
+      <span>
+        {plan.decision}
+        {plan.committee_date ? ` (${fmtDate(plan.committee_date)})` : ''}
+      </span>
+      <a href={PLANS_APP_URL} target="_blank" rel="noreferrer">
+        באפליקציית תוכניות הבינוי
+      </a>
+    </Popup>
+  )
+  if (plan.geometry)
+    return (
+      <GeoJSON data={{ type: 'Feature', properties: {}, geometry: plan.geometry } as Feature} style={() => style}>
+        {card}
+      </GeoJSON>
+    )
+  if (!plan.center) return null
+  return (
+    <CircleMarker center={[plan.center[1], plan.center[0]]} radius={6} pathOptions={{ ...style, fillOpacity: 0.5 }}>
+      {card}
+    </CircleMarker>
   )
 }
