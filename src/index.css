@@ -340,7 +340,7 @@ b, strong { font-weight: 500; }
 .list-head h2 { font-size: 13px; letter-spacing: 0.16em; font-weight: 400; color: var(--ink-3); }
 .card { border-radius: 8px; }
 .card:hover, .card.is-hover { background: #FFFFFF; border-color: transparent; box-shadow: var(--shadow); }
-.thumb { border-radius: 6px; filter: grayscale(1) contrast(1.05); background: linear-gradient(160deg, #DADAD8, #B9B9B7); }
+.thumb { border-radius: 6px; background: linear-gradient(160deg, #DADAD8, #B9B9B7); }
 .card:hover .thumb { filter: none; }
 .thumb-empty { color: var(--ink-2); font-weight: 300; }
 .card h3 { font-size: 17px; font-weight: 400; }

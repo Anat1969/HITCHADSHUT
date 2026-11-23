@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { CITY_URL, DEV_CHAT_URL, RESEARCH_URL, SHARE_IMAGE, SHARE_TEXT, SHARE_VERSION } from '../lib/links'
+import { useEffect, useRef } from 'react'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { CITY_URL, DEV_CHAT_URL, RESEARCH_URL } from '../lib/links'
 import '../styles/topbar.css'
 
 interface MenuElement extends HTMLElement {
@@ -16,86 +16,38 @@ declare module 'react' {
   }
 }
 
-/** Fixed top bar on every page: icon and app name back to the home page, and the A&I logo button
- * (<ai-menu> from https://appofapp-gh.vercel.app/ai-menu.js): copy link, dev chat, research, install and admin. */
-export default function TopBar({ context }: { context?: string }) {
-  const { pathname } = useLocation()
+/** One fixed top bar, the same on every page (ענת, 23.11.2026): nothing is added, removed or moved per page.
+ *  - The app icon and name are the home button.
+ *  - Navigation: מודל העיר, כתבות (the current page is marked, not hidden).
+ *  - The A&I logo button (<ai-menu>): copy link, dev chat, research, install, the city film and admin.
+ *  - The Ashdod municipality logo, to the city site. */
+export default function TopBar(_props: { context?: string }) {
   const navigate = useNavigate()
-  const [sent, setSent] = useState(false)
   const menuRef = useRef<MenuElement>(null)
-  const isHome = pathname === '/'
 
   useEffect(() => {
-    if (menuRef.current) menuRef.current.items = [{ label: 'ניהול', onSelect: () => navigate('/admin') }]
+    if (menuRef.current)
+      menuRef.current.items = [
+        { label: 'סרטון מודל העיר', onSelect: () => navigate('/city?film=1') },
+        { label: 'ניהול', onSelect: () => navigate('/admin') },
+      ]
   }, [navigate])
 
-  // One button sends the app in one go: picture of the home page, one sentence, and the link.
-  // Phones: the system share sheet with the picture as a file and the sentence and link as its caption.
-  // Computers: WhatsApp (web or app) opens with the message ready; the picture comes from the link preview.
-  const shareFile = useRef<File | null>(null)
-  useEffect(() => {
-    fetch(SHARE_IMAGE)
-      .then((r) => (r.ok ? r.blob() : Promise.reject()))
-      .then((b) => (shareFile.current = new File([b], 'ma-nivne-svivi.png', { type: 'image/png' })))
-      .catch(() => {})
-  }, [])
-
-  const share = async () => {
-    const url = new URL(window.location.href)
-    url.searchParams.set('s', SHARE_VERSION) // a new address, so WhatsApp builds a fresh preview
-    const text = `${SHARE_TEXT}\n${url.toString()}`
-    const file = shareFile.current
-    const phone = window.matchMedia('(pointer: coarse)').matches
-    if (phone && file && navigator.canShare?.({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], text })
-      } catch {
-        /* closed by the user */
-      }
-      return
-    }
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener')
-    navigator.clipboard?.writeText(text).catch(() => {})
-    setSent(true)
-    setTimeout(() => setSent(false), 2400)
-  }
-
   return (
-    <header className={isHome ? 'tb' : 'tb tb-inner'} dir="rtl">
+    <header className="tb" dir="rtl">
       <div className="tb-in">
-        <Link to="/" className="tb-brand" aria-label="מה נבנה סביבי, לדף הבית">
+        <Link to="/" className="tb-brand" aria-label="מה נבנה סביבי, לדף הבית" title="דף הבית">
           <img src="/favicon.svg" alt="" width={28} height={28} />
           <span>מה נבנה סביבי</span>
           <small>אשדוד</small>
         </Link>
-        {context && <span className="tb-context">{context}</span>}
         <nav className="tb-actions">
-          {!isHome && (
-            <Link to="/" className="tb-btn">
-              דף הבית
-            </Link>
-          )}
-          {pathname !== '/city' && (
-            <Link to="/city" className={isHome ? 'tb-btn' : 'tb-btn tb-articles-inner'}>
-              מודל העיר
-            </Link>
-          )}
-          {pathname === '/city' && (
-            <Link to="/city?film=1" className="tb-btn tb-icon" aria-label="סרטון מודל העיר" title="סרטון מודל העיר">
-              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />
-              </svg>
-            </Link>
-          )}
-          {pathname !== '/articles' && (
-            <Link to="/articles" className={isHome ? 'tb-btn' : 'tb-btn tb-articles-inner'}>
-              כתבות
-            </Link>
-          )}
-          <button type="button" className="tb-btn tb-share" onClick={share} aria-label="שיתוף האפליקציה: תמונה, משפט וקישור">
-            <img src={SHARE_IMAGE} alt="" width={56} height={29} />
-            <span>{sent ? 'ההודעה מוכנה בוואטסאפ' : 'שיתוף'}</span>
-          </button>
+          <NavLink to="/city" className="tb-btn">
+            מודל העיר
+          </NavLink>
+          <NavLink to="/articles" className="tb-btn">
+            כתבות
+          </NavLink>
           <ai-menu ref={menuRef} chat={DEV_CHAT_URL} research={RESEARCH_URL || undefined} />
           <a href={CITY_URL} target="_blank" rel="noreferrer" className="tb-city" aria-label="אתר עיריית אשדוד">
             <img src="/ashdod-logo.png" alt="עיריית אשדוד" width={55} height={32} />
