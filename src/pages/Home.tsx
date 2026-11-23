@@ -354,10 +354,6 @@ export default function Home() {
                   focus={focus}
                 />
               </div>
-              <Link to="/city" className="fp-city">
-                <b>מודל העיר</b>
-                <span>כל התוכניות בתלת-ממד: היום, מאושר ובתכנון</span>
-              </Link>
               <div className="fp-blue">
                 <i style={{ borderColor: BLUE_LINE, background: `${BLUE_LINE}1A` }} />
                 הקו הכחול: גבול כל תוכנית ומתחם

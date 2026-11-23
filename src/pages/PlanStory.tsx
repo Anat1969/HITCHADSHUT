@@ -83,7 +83,9 @@ function Chapter({
     <section className={`mag-chapter lay-${lay}${flip ? ' flip' : ''}`} id={ch.id} aria-labelledby={`h-${ch.id}`}>
       {lay === 'image' && src && (
         <figure className="mag-figure">
-          <img src={src} alt={img?.caption ?? ''} loading="lazy" />
+          <a href={src} target="_blank" rel="noreferrer" aria-label="פתיחת התמונה בגודל מלא">
+            <img src={src} alt={img?.caption ?? ''} loading="lazy" />
+          </a>
           {img?.caption && <figcaption>{img.caption}</figcaption>}
         </figure>
       )}

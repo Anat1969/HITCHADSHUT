@@ -1,62 +1,44 @@
-/* Fixed top bar, shared by every page. */
+/* One fixed top bar, the same on every page. Its height is a variable, so sticky elements below it
+   (the plan index, figures) and anchor jumps never slide under it. */
+:root { --tb-h: 56px; }
+@media (max-width: 640px) { :root { --tb-h: 50px; } }
 .tb {
-  position: sticky; top: 0; z-index: 60;
-  background: linear-gradient(180deg, rgba(250,250,249,0.96), rgba(236,236,234,0.9));
+  position: sticky; top: 0; z-index: 60; height: var(--tb-h); box-sizing: border-box;
+  background: linear-gradient(180deg, rgba(250,250,249,0.97), rgba(236,236,234,0.93));
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid #B9B9B7;
   box-shadow: 0 6px 18px -14px rgba(0,0,0,0.45);
   font-family: 'Heebo', system-ui, sans-serif; color: #111111;
 }
-.tb-in { max-width: 1400px; margin: 0 auto; padding: 8px clamp(14px, 4vw, 56px); display: flex; align-items: center; gap: 14px; min-width: 0; }
-.tb-brand { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; color: inherit; flex: 0 0 auto; }
-.tb-brand img { border-radius: 7px; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
-.tb-brand span { font-size: 17px; font-weight: 400; letter-spacing: -0.01em; }
+.tb-in { max-width: 1400px; height: 100%; margin: 0 auto; padding: 0 clamp(12px, 4vw, 56px); display: flex; align-items: center; gap: 14px; min-width: 0; box-sizing: border-box; }
+.tb-brand { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; color: inherit; flex: 0 1 auto; min-width: 0; }
+.tb-brand img { border-radius: 7px; box-shadow: 0 2px 6px rgba(0,0,0,0.25); flex: none; }
+.tb-brand span { font-size: 17px; font-weight: 400; letter-spacing: -0.01em; white-space: nowrap; }
 .tb-brand small { font-size: 11px; letter-spacing: 0.18em; color: #6E6E6C; }
-.tb-context { font-size: 12px; letter-spacing: 0.14em; color: #555555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .tb-actions { margin-inline-start: auto; display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
 .tb-btn {
-  border: 1px solid #B9B9B7; background: linear-gradient(180deg, #FFFFFF, #ECECEA); color: #111111;
-  font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; cursor: pointer; text-decoration: none;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08); white-space: nowrap; transition: transform 0.15s ease, box-shadow 0.15s ease;
+  border: 1px solid #B9B9B7; background: #FFFFFF; color: #111111;
+  font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; cursor: pointer; text-decoration: none; white-space: nowrap;
 }
-.tb-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 10px -4px rgba(0,0,0,0.3); }
-.tb-btn[aria-expanded='true'] { background: #111111; color: #FFFFFF; border-color: #111111; }
-/* Share button: the home-page picture is the button. */
-.tb-share { display: inline-flex; align-items: center; gap: 8px; padding-block: 3px; padding-inline: 4px 12px; }
-.tb-share img { display: block; width: 56px; height: 29px; object-fit: cover; object-position: top; border-start-start-radius: 999px; border-end-start-radius: 999px; border-start-end-radius: 6px; border-end-end-radius: 6px; border: 1px solid #D6D6D4; }
-/* Ashdod municipality logo, left corner (municipal topics only). */
+.tb-btn:hover { border-color: #111111; }
+.tb-btn.active { background: #111111; color: #FFFFFF; border-color: #111111; }
+.tb-btn:focus-visible { outline: 2px solid #4A6FD8; outline-offset: 2px; }
+/* Ashdod municipality logo, left corner. */
 .tb-city { display: block; margin-inline-start: 6px; padding-inline-start: 12px; border-inline-start: 1px solid #C9C9C7; flex: 0 0 auto; }
 .tb-city img { display: block; height: 32px; width: auto; }
 @media (max-width: 640px) {
-  .tb-brand small, .tb-context { display: none; }
+  .tb-brand small { display: none; }
   .tb-brand span { font-size: 15px; }
-  .tb-btn { padding: 6px 10px; font-size: 12px; }
-  .tb-share { padding-block: 3px; padding-inline: 3px 10px; }
-  .tb-share img { width: 46px; height: 24px; }
+  .tb-btn { padding: 5px 10px; font-size: 12px; }
   .tb-city { margin-inline-start: 2px; padding-inline-start: 8px; }
   .tb-city img { height: 24px; }
 }
-/* Narrow phones: the share picture alone is the button, so the city logo fits. */
 @media (max-width: 480px) {
   .tb-in { gap: 8px; }
   .tb-actions { gap: 4px; }
-  .tb-share span { display: none; }
-  .tb-share { padding: 3px; }
   .tb-brand { gap: 6px; }
   .tb-brand img { width: 24px; height: 24px; }
-}
-@media (max-width: 380px) {
-  .tb-in { padding-inline: 10px; gap: 6px; }
   .tb-brand span { font-size: 14px; }
-  .tb-btn { padding: 5px 8px; }
-  .tb-share { padding: 3px; }
-  .tb-city { padding-inline-start: 6px; }
 }
-
-/* כתבות: בטלפון, בעמוד פנימי שיש בו גם "דף הבית", הכפתור מוסתר כדי שהסרגל לא יגלוש. מדף הבית הוא תמיד גלוי. */
-@media (max-width: 480px) { .tb-articles-inner { display: none; } }
-
-/* icon-only button (the city film, on /city) */
-.tb-icon { display: inline-grid; place-items: center; width: 32px; padding: 0; }
-/* Narrow phones, inner pages: the app icon alone links home (the "דף הבית" button is there too), so the bar fits. */
-@media (max-width: 480px) { .tb-inner .tb-brand span { display: none; } .tb-icon { width: 28px; } }
+/* Narrowest phones: the app icon alone is the home button, so the bar never wraps or scrolls. */
+@media (max-width: 400px) { .tb-brand span { display: none; } }
