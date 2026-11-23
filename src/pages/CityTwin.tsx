@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import { LAND_USE, STATUS_LABEL } from '../lib/labels'
 import type { ProjectStatus } from '../lib/types'
 import '../styles/city.css'
+import { BUILDING_COLOR, PLANS_APP_URL, loadBuildingPlans, type BuildingPlan } from '../lib/buildingPlans'
 
 // Minimal, conventional icons (ענת, 23.11.2026): full screen, exit full screen, summary.
 const Icon = ({ d }: { d: string }) => (
@@ -59,6 +60,13 @@ export default function CityTwin() {
   const [error, setError] = useState(false)
   const [picked, setPicked] = useState<string | null>(params.get('focus'))
   const [summaryOpen, setSummaryOpen] = useState(false)
+  // Plan types, as in the PLANS-GH app: urban renewal (this app) and building plans (תב/).
+  const showRenewal = params.get('renewal') !== '0'
+  const showBuilding = params.get('building') !== '0'
+  const [buildingPlans, setBuildingPlans] = useState<BuildingPlan[]>([])
+  useEffect(() => {
+    loadBuildingPlans().then(setBuildingPlans)
+  }, [])
   const [full, setFull] = useState(false)
   const set = (k: string, v: string | null) => {
     const next = new URLSearchParams(params)
@@ -136,6 +144,17 @@ export default function CityTwin() {
           ))}
         </div>
       </div>
+      <div className="city-group" role="group" aria-label="תוכניות">
+        <span>תוכניות</span>
+        <div className="city-seg">
+          <button type="button" aria-pressed={showRenewal} onClick={() => set('renewal', showRenewal ? '0' : null)}>
+            התחדשות עירונית
+          </button>
+          <button type="button" aria-pressed={showBuilding} onClick={() => set('building', showBuilding ? '0' : null)} title={`מאפליקציית תוכניות הבינוי: ${PLANS_APP_URL}`}>
+            תוכניות בינוי
+          </button>
+        </div>
+      </div>
       <div className="city-group" role="group" aria-label="צבע">
         <span>צבע</span>
         <div className="city-seg">
@@ -155,6 +174,12 @@ export default function CityTwin() {
   // The legend sits above the model, small, so it never hides it.
   const legend = (
     <ul className="city-legend" title={viewInfo.note}>
+      {showBuilding && (
+        <li>
+          <i style={{ background: `${BUILDING_COLOR}55`, outline: `1.5px dashed ${BUILDING_COLOR}` }} />
+          תוכניות בינוי
+        </li>
+      )}
       {color === 'stage' ? (
         <>
           <li>
@@ -207,7 +232,7 @@ export default function CityTwin() {
 
       <div ref={stageRef} className={`city-stage${full ? ' is-full' : ''}${summaryOpen ? ' has-summary' : ''}`}>
         {twin ? (
-          <CityMap3D twin={twin} view={view} color={color} focus={picked} onPick={setPicked} />
+          <CityMap3D twin={twin} view={view} color={color} focus={picked} onPick={setPicked} buildingPlans={showBuilding ? buildingPlans : []} showRenewal={showRenewal} />
         ) : (
           <div className="city-map city-wait">{error ? 'מודל העיר אינו זמין כרגע' : 'טוען את מודל העיר...'}</div>
         )}

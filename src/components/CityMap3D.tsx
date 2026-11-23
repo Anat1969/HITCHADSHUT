@@ -7,6 +7,7 @@ import type { FeatureCollection } from 'geojson'
 import { bboxOf } from '../lib/geo'
 import { BLUE_LINE } from '../lib/labels'
 import { landUseColor } from '../lib/mapColors'
+import { BUILDING_COLOR, type BuildingPlan } from '../lib/buildingPlans'
 
 maplibregl.setWorkerUrl(workerUrl)
 
@@ -46,12 +47,16 @@ interface Props {
   color: CityColor
   focus: string | null
   onPick: (planNumber: string | null) => void
+  /** Building plans (PLANS-GH): their lots in bronze. Empty hides them. */
+  buildingPlans?: BuildingPlan[]
+  /** Show the urban renewal plans (boundaries and volumes). */
+  showRenewal?: boolean
 }
 
 // Growth of each stage's volumes: 0 = not built, 1 = built.
 const stageFactor = (gA: number, gP: number): ExpressionSpecification => ['match', ['get', 'stage'], 'approved', gA, gP]
 
-export default function CityMap3D({ twin, view, color, focus, onPick }: Props) {
+export default function CityMap3D({ twin, view, color, focus, onPick, buildingPlans = [], showRenewal = true }: Props) {
   const el = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MlMap | null>(null)
   const [ready, setReady] = useState(false)
@@ -170,6 +175,9 @@ export default function CityMap3D({ twin, view, color, focus, onPick }: Props) {
         map.on('mouseenter', id, () => (map.getCanvas().style.cursor = 'pointer'))
         map.on('mouseleave', id, () => (map.getCanvas().style.cursor = ''))
       }
+      map.addSource('building', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
+      map.addLayer({ id: 'building-fill', type: 'fill', source: 'building', paint: { 'fill-color': BUILDING_COLOR, 'fill-opacity': 0.22 } })
+      map.addLayer({ id: 'building-line', type: 'line', source: 'building', paint: { 'line-color': BUILDING_COLOR, 'line-width': 1.6, 'line-dasharray': [2, 1.5] } })
       setReady(true)
     })
     return () => {
@@ -204,6 +212,22 @@ export default function CityMap3D({ twin, view, color, focus, onPick }: Props) {
     }
     anim.current = requestAnimationFrame(step)
   }, [view, ready])
+
+  // Building plans (PLANS-GH) and the renewal plans on or off.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !ready) return
+    const src = map.getSource('building') as maplibregl.GeoJSONSource | undefined
+    src?.setData({
+      type: 'FeatureCollection',
+      features: buildingPlans
+        .filter((b) => b.geometry)
+        .map((b) => ({ type: 'Feature', properties: { plan_number: b.plan_number, title: b.title }, geometry: b.geometry! })),
+    })
+    const vis = showRenewal ? 'visible' : 'none'
+    for (const id of ['boundary-fill', 'boundary-line', 'boundary-line-planning', 'massing-approved', 'massing-planning'])
+      if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis)
+  }, [buildingPlans, showRenewal, ready])
 
   // Colour by stage or by land use.
   useEffect(() => {

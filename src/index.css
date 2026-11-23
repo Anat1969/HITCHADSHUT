@@ -385,3 +385,15 @@ b, strong { font-weight: 500; }
 /* ---------- כתבות (/articles): הדף נגלל רגיל, ברוחב המסך ---------- */
 html:has(.articles-page), html:has(.articles-page) body, html:has(.articles-page) #root { height: auto; }
 .articles-main { max-width: 1440px; margin: 0 auto; padding: 24px 16px 64px; }
+
+/* The red arrow over the plan in focus: it slides from plan to plan and breathes a little. */
+.plan-arrow { transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); pointer-events: none; }
+.leaflet-zoom-anim .plan-arrow { transition: none; }
+.plan-arrow svg { display: block; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.35)); animation: plan-arrow-bob 1.6s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes plan-arrow-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .plan-arrow, .plan-arrow svg { transition: none; animation: none; } }
+/* Building plan card (PLANS-GH) */
+.bp-pop .leaflet-popup-content { margin: 10px 12px; display: grid; gap: 3px; font: 13px/1.45 'Heebo', system-ui, sans-serif; direction: rtl; text-align: right; }
+.bp-pop b { font-size: 14px; font-weight: 500; }
+.bp-pop span { color: #555555; }
+.bp-pop a { color: #111111; font-weight: 500; margin-top: 4px; }

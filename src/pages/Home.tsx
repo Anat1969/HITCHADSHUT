@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { BUILDING_COLOR, loadBuildingPlans, type BuildingPlan } from '../lib/buildingPlans'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import MapView, { type MapFocus } from '../components/MapView'
 import ProjectDetail, { coverOf } from '../components/ProjectDetail'
@@ -26,6 +27,13 @@ export default function Home() {
   const [quarterId, setQuarterId] = useState('')
   const [nearOnly, setNearOnly] = useState(false)
   const [mapOpen, setMapOpen] = useState(false)
+  // Both apps on one map: urban renewal plans (this app) and building plans (PLANS-GH).
+  const [showRenewal, setShowRenewal] = useState(true)
+  const [showBuilding, setShowBuilding] = useState(true)
+  const [buildingPlans, setBuildingPlans] = useState<BuildingPlan[]>([])
+  useEffect(() => {
+    loadBuildingPlans().then(setBuildingPlans)
+  }, [])
   const [answered, setAnswered] = useState<Feedback[]>([])
 
   const [me, setMe] = useState<LonLat | null>(null)
@@ -352,11 +360,20 @@ export default function Home() {
                   me={me}
                   meRadius={NEAR_METERS}
                   focus={focus}
+                  hideProjects={!showRenewal}
+                  buildingPlans={showBuilding ? buildingPlans : null}
                 />
               </div>
-              <div className="fp-blue">
-                <i style={{ borderColor: BLUE_LINE, background: `${BLUE_LINE}1A` }} />
-                הקו הכחול: גבול כל תוכנית ומתחם
+              <div className="fp-layers" role="group" aria-label="תוכניות על המפה">
+                <span>תוכניות</span>
+                <button type="button" aria-pressed={showRenewal} onClick={() => setShowRenewal((v) => !v)}>
+                  <i style={{ borderColor: BLUE_LINE, background: `${BLUE_LINE}1A` }} />
+                  התחדשות עירונית
+                </button>
+                <button type="button" aria-pressed={showBuilding} onClick={() => setShowBuilding((v) => !v)}>
+                  <i style={{ borderColor: BUILDING_COLOR, background: `${BUILDING_COLOR}29`, borderStyle: 'dashed' }} />
+                  תוכניות בינוי{buildingPlans.length ? ` (${buildingPlans.length})` : ''}
+                </button>
               </div>
               <div className="fp-swatches" role="group" aria-label="סינון לפי שלב">
                 {STATUS_ORDER.map((st) => (
