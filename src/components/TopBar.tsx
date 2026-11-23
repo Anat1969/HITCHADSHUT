@@ -61,7 +61,7 @@ export default function TopBar({ context }: { context?: string }) {
   }
 
   return (
-    <header className="tb" dir="rtl">
+    <header className={isHome ? 'tb' : 'tb tb-inner'} dir="rtl">
       <div className="tb-in">
         <Link to="/" className="tb-brand" aria-label="מה נבנה סביבי, לדף הבית">
           <img src="/favicon.svg" alt="" width={28} height={28} />
@@ -78,6 +78,13 @@ export default function TopBar({ context }: { context?: string }) {
           {pathname !== '/city' && (
             <Link to="/city" className={isHome ? 'tb-btn' : 'tb-btn tb-articles-inner'}>
               מודל העיר
+            </Link>
+          )}
+          {pathname === '/city' && (
+            <Link to="/city?film=1" className="tb-btn tb-icon" aria-label="סרטון מודל העיר" title="סרטון מודל העיר">
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />
+              </svg>
             </Link>
           )}
           {pathname !== '/articles' && (

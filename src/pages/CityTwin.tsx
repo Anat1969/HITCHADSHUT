@@ -7,8 +7,18 @@ import { LAND_USE, STATUS_LABEL } from '../lib/labels'
 import type { ProjectStatus } from '../lib/types'
 import '../styles/city.css'
 
+// Minimal, conventional icons (ענת, 23.11.2026): full screen, exit full screen, summary.
+const Icon = ({ d }: { d: string }) => (
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d={d} />
+  </svg>
+)
+const ICON_FULL = 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5'
+const ICON_EXIT = 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5'
+const ICON_SUMMARY = 'M5 7h14M5 12h14M5 17h9'
+
 const VIEWS: { id: CityView; label: string; note: string }[] = [
-  { id: 'today', label: 'היום', note: 'המבנים של היום, כולל אלה שהתוכניות עתידות להרוס. הקו הכחול הוא הגבול של כל תוכנית.' },
+  { id: 'today', label: 'קיים', note: 'המבנים של היום, כולל אלה שהתוכניות עתידות להרוס. הקו הכחול הוא הגבול של כל תוכנית.' },
   {
     id: 'approved',
     label: 'מאושר',
@@ -16,7 +26,7 @@ const VIEWS: { id: CityView; label: string; note: string }[] = [
   },
   {
     id: 'all',
-    label: 'מאושר ובתכנון',
+    label: 'בתכנון',
     note: 'נוספות גם התוכניות שעוד לא אושרו, בכחול שקוף ובקו מקווקו. הן עוד יכולות להשתנות.',
   },
 ]
@@ -50,7 +60,15 @@ export default function CityTwin() {
   const [picked, setPicked] = useState<string | null>(params.get('focus'))
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [full, setFull] = useState(false)
-  const [film, setFilm] = useState(false)
+  const set = (k: string, v: string | null) => {
+    const next = new URLSearchParams(params)
+    if (v == null) next.delete(k)
+    else next.set(k, v)
+    setParams(next, { replace: true })
+  }
+  // The film opens from its button in the top bar (/city?film=1).
+  const film = params.get('film') === '1'
+  const setFilm = (on: boolean) => set('film', on ? '1' : null)
   const stageRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -88,13 +106,6 @@ export default function CityTwin() {
     setFull(true)
   }
 
-  const set = (k: string, v: string | null) => {
-    const next = new URLSearchParams(params)
-    if (v == null) next.delete(k)
-    else next.set(k, v)
-    setParams(next, { replace: true })
-  }
-
   const plans = useMemo(() => twin?.plans ?? [], [twin])
   const approved = useMemo(() => plans.filter((p) => p.stage === 'approved'), [plans])
   const planning = useMemo(() => plans.filter((p) => p.stage === 'planning'), [plans])
@@ -112,40 +123,75 @@ export default function CityTwin() {
     return Object.keys(LAND_USE).filter((k) => cats.has(k))
   }, [twin])
 
+  // Every control is a name and its options: מצב (what is built) and צבע (what the colour means).
+  const controls = (
+    <div className="city-controls">
+      <div className="city-group" role="group" aria-label="מצב">
+        <span>מצב</span>
+        <div className="city-seg">
+          {VIEWS.map((v) => (
+            <button key={v.id} type="button" title={v.note} aria-pressed={view === v.id} onClick={() => set('view', v.id === 'all' ? null : v.id)}>
+              {v.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="city-group" role="group" aria-label="צבע">
+        <span>צבע</span>
+        <div className="city-seg">
+          <button type="button" aria-pressed={color === 'stage'} onClick={() => set('color', null)}>
+            שלב
+          </button>
+          <button type="button" aria-pressed={color === 'use'} onClick={() => set('color', 'use')}>
+            ייעוד
+          </button>
+        </div>
+      </div>
+      <button type="button" className="city-icon" aria-pressed={summaryOpen} onClick={() => setSummaryOpen((v) => !v)} aria-label="סיכום" title="סיכום">
+        <Icon d={ICON_SUMMARY} />
+      </button>
+    </div>
+  )
+  // The legend sits above the model, small, so it never hides it.
+  const legend = (
+    <ul className="city-legend" title={viewInfo.note}>
+      {color === 'stage' ? (
+        <>
+          <li>
+            <i style={{ background: '#D2D2D0' }} />
+            קיים
+          </li>
+          {view !== 'today' && (
+            <li>
+              <i style={{ background: STAGE_COLOR.approved }} />
+              מאושר
+            </li>
+          )}
+          {view === 'all' && (
+            <li>
+              <i style={{ background: STAGE_COLOR.planning, opacity: 0.78 }} />
+              בתכנון
+            </li>
+          )}
+        </>
+      ) : (
+        usesInModel.map((k) => (
+          <li key={k}>
+            <i style={{ background: LAND_USE[k].color }} />
+            {LAND_USE[k].label}
+          </li>
+        ))
+      )}
+    </ul>
+  )
+
   return (
     <div className="city" dir="rtl">
       <TopBar context="מודל העיר" />
       <header className="city-head">
-        <div>
-          <h1>מודל העיר</h1>
-          <p>כל התוכניות במודל אחד: מה יש היום, מה כבר אושר ומה עוד בתכנון.</p>
-        </div>
-        <div className="city-controls">
-          <div className="city-seg" role="group" aria-label="מה רואים">
-            {VIEWS.map((v) => (
-              <button key={v.id} type="button" aria-pressed={view === v.id} onClick={() => set('view', v.id === 'all' ? null : v.id)}>
-                {v.label}
-              </button>
-            ))}
-          </div>
-          <div className="city-seg" role="group" aria-label="צבע לפי">
-            <button type="button" aria-pressed={color === 'stage'} onClick={() => set('color', null)}>
-              צבע לפי שלב
-            </button>
-            <button type="button" aria-pressed={color === 'use'} onClick={() => set('color', 'use')}>
-              לפי ייעוד
-            </button>
-          </div>
-          <button type="button" className="city-btn" aria-pressed={summaryOpen} onClick={() => setSummaryOpen((v) => !v)}>
-            סיכום
-          </button>
-          <button type="button" className="city-btn" onClick={toggleFull}>
-            {full ? 'יציאה ממסך מלא' : 'מסך מלא'}
-          </button>
-          <button type="button" className="city-btn" onClick={() => setFilm(true)}>
-            סרטון
-          </button>
-        </div>
+        <h1>מודל העיר</h1>
+        {controls}
+        {legend}
       </header>
       {film && (
         <div className="city-film" role="dialog" aria-label="סרטון מודל העיר" onClick={() => setFilm(false)}>
@@ -159,7 +205,7 @@ export default function CityTwin() {
         </div>
       )}
 
-      <div ref={stageRef} className={`city-stage${full ? ' is-full' : ''}`}>
+      <div ref={stageRef} className={`city-stage${full ? ' is-full' : ''}${summaryOpen ? ' has-summary' : ''}`}>
         {twin ? (
           <CityMap3D twin={twin} view={view} color={color} focus={picked} onPick={setPicked} />
         ) : (
@@ -167,51 +213,14 @@ export default function CityTwin() {
         )}
 
         {full && (
-          <div className="city-float-controls">
-            <div className="city-seg" role="group" aria-label="מה רואים">
-              {VIEWS.map((v) => (
-                <button key={v.id} type="button" aria-pressed={view === v.id} onClick={() => set('view', v.id === 'all' ? null : v.id)}>
-                  {v.label}
-                </button>
-              ))}
-            </div>
-            <button type="button" className="city-btn" aria-pressed={summaryOpen} onClick={() => setSummaryOpen((v) => !v)}>
-              סיכום
-            </button>
-            <button type="button" className="city-btn" onClick={toggleFull}>
-              יציאה ממסך מלא
-            </button>
+          <div className="city-strip">
+            {controls}
+            {legend}
           </div>
         )}
-
-        <div className="city-legend">
-          <p>{viewInfo.note}</p>
-          {color === 'stage' ? (
-            <ul>
-              <li>
-                <i style={{ background: '#D2D2D0' }} />
-                מבנים היום
-              </li>
-              <li>
-                <i style={{ background: STAGE_COLOR.approved }} />
-                מאושר
-              </li>
-              <li>
-                <i style={{ background: STAGE_COLOR.planning, opacity: 0.78 }} />
-                בתכנון
-              </li>
-            </ul>
-          ) : (
-            <ul>
-              {usesInModel.map((k) => (
-                <li key={k}>
-                  <i style={{ background: LAND_USE[k].color }} />
-                  {LAND_USE[k].label}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <button type="button" className="city-icon city-full" onClick={toggleFull} aria-label={full ? 'יציאה ממסך מלא' : 'מסך מלא'} title={full ? 'יציאה ממסך מלא' : 'מסך מלא'}>
+          <Icon d={full ? ICON_EXIT : ICON_FULL} />
+        </button>
 
         {pickedPlan && (
           <div className="city-card" role="dialog" aria-label={pickedPlan.title}>
