@@ -26,3 +26,9 @@ begin
       r.src, env);
   end loop;
 end $$;
+
+-- ציר מנחם בגין: no table 5 yet, so the model title and hint are set by hand after every rebuild.
+update plan_models set model = jsonb_set(jsonb_set(model, '{ui,summary_label}', to_jsonb('התחדשות ציר מנחם בגין · תכנון ראשוני, לפי טיוטת נספח הבינוי'::text)),
+  '{ui,hint}', to_jsonb('המגרשים וקווי הבניין מטיוטת נספח הבינוי (הערכה). הוראות התוכנית עוד לא פורסמו, ולכן אין עדיין קומות וגובה. לחיצה על מגרש מציגה את מה שידוע עליו.'::text))
+where plan_number = '603-1510577';
+select plan_builders.build_city_twin();
