@@ -8,7 +8,9 @@ const [src, flag] = process.argv.slice(2)
 if (!src) { console.error('usage: sync.mjs <PLANS-GH> [--check]'); process.exit(2) }
 const here = dirname(fileURLToPath(import.meta.url)), repo = join(here, '..', '..')
 const pairs = [[join(src, 'standard/urban-standard.mjs'), join(repo, 'src/lib/urban-standard/urban-standard.js')],
-  [join(src, 'data/urban-standard/legend-harvest.json'), join(repo, 'src/lib/urban-standard/legend-harvest.json')]]
+  [join(src, 'data/urban-standard/legend-harvest.json'), join(repo, 'src/lib/urban-standard/legend-harvest.json')],
+  // all building plans of PLANS-GH with their geometry and detailed models (tools/urban-standard/building-twin.py there)
+  [join(src, 'data/building-twin.json'), join(repo, 'public/building-twin.json')]]
 let bad = 0
 for (const [a, b] of pairs) {
   const A = readFileSync(a, 'utf8'), B = existsSync(b) ? readFileSync(b, 'utf8') : null

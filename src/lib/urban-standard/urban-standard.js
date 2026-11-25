@@ -12,7 +12,7 @@
  *      MapLibre ו-Three.js OrbitControls, כך שאותה פעולה נותנת אותה תוצאה בכל מפה.
  * המסמך המלא: docs/urban-twin/ בשני המאגרים.
  */
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0';
 
 /* ───────────── 1. קודי ייעוד ושימוש ───────────── */
 /**
@@ -495,7 +495,8 @@ export function applyOrbit(ctl, cam, el, T, h = {}){
   ctl.mouseButtons = { LEFT:T.MOUSE.PAN, MIDDLE:T.MOUSE.DOLLY, RIGHT:T.MOUSE.ROTATE };
   ctl.touches = { ONE:T.TOUCH.PAN, TWO:T.TOUCH.DOLLY_ROTATE };
   ctl.screenSpacePanning = false;
-  ctl.maxPolarAngle = Math.min(ctl.maxPolarAngle, I.maxTiltDeg * Math.PI / 180);
+  // מודל מפורט (מבט בגובה עיניים, הליכה) שומר הטיה עד האופק; מפה עירונית מוגבלת ל-maxTiltDeg. נמצא בפיילוט: הגבלה ל-80° הרימה את מצלמת העיניים ל-17 מ'
+  if(!h.eyeLevel) ctl.maxPolarAngle = Math.min(ctl.maxPolarAngle, I.maxTiltDeg * Math.PI / 180);
   const ground = h.groundY || (() => 0);
   const ray = new T.Raycaster(), plane = new T.Plane(new T.Vector3(0, 1, 0), 0), hit = new T.Vector3();
   const pointAt = (cx, cy) => {
