@@ -8,7 +8,7 @@ import { bboxOf } from '../lib/geo'
 import { applyMapLibre, LOOK, MAPLIBRE_OPTIONS } from '../lib/urban-standard/urban-standard.js'
 import { BLUE_LINE } from '../lib/labels'
 import { landUseColor } from '../lib/mapColors'
-import { BUILDING_COLOR, type BuildingPlan } from '../lib/buildingPlans'
+import { BUILDING_COLOR, inRing, modelFeatures, type BuildingPlan } from '../lib/buildingPlans'
 
 maplibregl.setWorkerUrl(workerUrl)
 
@@ -152,7 +152,7 @@ export default function CityMap3D({ twin, view, color, focus, onPick, buildingPl
           id: `massing-${stage}`,
           type: 'fill-extrusion',
           source: 'massing',
-          filter: ['==', ['get', 'stage'], stage],
+          filter: ['all', ['==', ['get', 'stage'], stage], ['!=', ['get', 'replaced'], true]],
           paint: {
             'fill-extrusion-color': STAGE_COLOR[stage],
             'fill-extrusion-height': 0,
@@ -183,6 +183,14 @@ export default function CityMap3D({ twin, view, color, focus, onPick, buildingPl
       map.addSource('building', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
       map.addLayer({ id: 'building-fill', type: 'fill', source: 'building', paint: { 'fill-color': BUILDING_COLOR, 'fill-opacity': 0.22 } })
       map.addLayer({ id: 'building-line', type: 'line', source: 'building', paint: { 'line-color': BUILDING_COLOR, 'line-width': 1.6, 'line-dasharray': [2, 1.5] } })
+      // The detailed models of the building plans (PLANS-GH floors.json): they replace the TABA volumes they cover.
+      map.addSource('building-model', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
+      map.addLayer({
+        id: 'building-model',
+        type: 'fill-extrusion',
+        source: 'building-model',
+        paint: { 'fill-extrusion-color': '#E9E2D3', 'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-opacity': 0.96, 'fill-extrusion-vertical-gradient': true },
+      })
       setReady(true)
     })
     return () => {
@@ -199,6 +207,8 @@ export default function CityMap3D({ twin, view, color, focus, onPick, buildingPl
     const map = mapRef.current
     if (!map || !ready) return
     const to = { a: view === 'today' ? 0 : 1, p: view === 'all' ? 1 : 0 }
+    // The building-plan models are the future: not in today's view
+    if (map.getLayer('building-model')) map.setLayoutProperty('building-model', 'visibility', view === 'today' ? 'none' : 'visible')
     const from = { ...grow.current }
     const start = performance.now()
     const ease = (x: number) => 1 - Math.pow(1 - x, 3)
@@ -230,6 +240,18 @@ export default function CityMap3D({ twin, view, color, focus, onPick, buildingPl
         .filter((b) => b.geometry)
         .map((b) => ({ type: 'Feature', properties: { plan_number: b.plan_number, title: b.title }, geometry: b.geometry! })),
     })
+    // Replacement without overlap: a TABA volume whose centre is inside a detailed model is not drawn; the rest of the TABA stays.
+    const { blocks, foot } = modelFeatures(buildingPlans)
+    ;(map.getSource('building-model') as maplibregl.GeoJSONSource | undefined)?.setData({ type: 'FeatureCollection', features: blocks })
+    const ms = map.getSource('massing') as maplibregl.GeoJSONSource | undefined
+    if (ms && foot.length) {
+      const features = twin.massing.features.map((f) => {
+        const ring = (f.geometry.type === 'Polygon' ? f.geometry.coordinates[0] : f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates[0][0] : []) as [number, number][]
+        const cx = ring.reduce((s, q) => s + q[0], 0) / (ring.length || 1), cy = ring.reduce((s, q) => s + q[1], 0) / (ring.length || 1)
+        return { ...f, properties: { ...f.properties, replaced: foot.some((r) => inRing(cx, cy, r)) } }
+      })
+      ms.setData({ type: 'FeatureCollection', features })
+    }
     const vis = showRenewal ? 'visible' : 'none'
     for (const id of ['boundary-fill', 'boundary-line', 'boundary-line-planning', 'massing-approved', 'massing-planning'])
       if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis)
