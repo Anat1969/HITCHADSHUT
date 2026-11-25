@@ -1,0 +1,290 @@
+{
+ "generated": "2026-11-25",
+ "tool": "scripts/urban-standard/harvest-legend.py (HITCHADSHUT)",
+ "sources": "public/plans/*/docs/*tashrit*.pdf (HITCHADSHUT), תשריטים שהפיקה מערכת מבא\"ת",
+ "removed_noise": [
+  "אשדוד",
+  "גיליון 1מתוך",
+  "גיליון 2מתוך",
+  "דוד",
+  "ה ר צל",
+  "י םד"
+ ],
+ "names": {
+  "דיור מיוחד": [
+   {
+    "hex": "#ffdf7f",
+    "files": [
+     "public/plans/tamal-1062/docs/tashrit-2.pdf"
+    ],
+    "plans": [
+     "tamal-1062"
+    ]
+   }
+  ],
+  "דיור מיוחד מסחר ותעסוקה": [
+   {
+    "hex": "#ffdf7f",
+    "files": [
+     "public/plans/603-0477232/docs/tashrit.pdf"
+    ],
+    "plans": [
+     "603-0477232"
+    ]
+   }
+  ],
+  "דרך מאושרת": [
+   {
+    "hex": "#ccb266",
+    "files": [
+     "public/plans/603-0477232/docs/tashrit.pdf",
+     "public/plans/tamal-1062/docs/tashrit-1.pdf",
+     "public/plans/tamal-1062/docs/tashrit-2.pdf",
+     "public/plans/tamal-2023/docs/tashrit-1.pdf",
+     "public/plans/tamal-2047/docs/tashrit.pdf"
+    ],
+    "plans": [
+     "603-0477232",
+     "tamal-1062",
+     "tamal-2023",
+     "tamal-2047"
+    ]
+   }
+  ],
+  "דרך מוצעת": [
+   {
+    "hex": "#ff003f",
+    "files": [
+     "public/plans/603-0477232/docs/tashrit.pdf",
+     "public/plans/tamal-1062/docs/tashrit-2.pdf",
+     "public/plans/tamal-2047/docs/tashrit.pdf"
+    ],
+    "plans": [
+     "603-0477232",
+     "tamal-1062",
+     "tamal-2047"
+    ]
+   }
+  ],
+  "דרך משולבת": [
+   {
+    "hex": "#bfff00",
+    "files": [
+     "public/plans/603-0477232/docs/tashrit.pdf"
+    ],
+    "plans": [
+     "603-0477232"
+    ]
+   }
+  ],
+  "ככר עירונית": [
+   {
+    "hex": "#dca56d",
+    "files": [
+     "public/plans/tamal-2047/docs/tashrit.pdf"
+    ],
+    "plans": [
+     "tamal-2047"
+    ]
+   }
+  ],
+  "מבנים ומוסדות ציבור": [
+   {
+    "hex": "#cc9966",
+    "files": [
+     "public/plans/603-0477232/docs/tashrit.pdf",
+     "public/plans/603-0590729/docs/tashrit.pdf",
+     "public/plans/tamal-1062/docs/tashrit-1.pdf",
+     "public/plans/tamal-1062/docs/tashrit-2.pdf",
+     "public/plans/tamal-2023/docs/tashrit-1.pdf",
+     "public/plans/tamal-2023/docs/tashrit-2.pdf",
+     "public/plans/tamal-2047/docs/tashrit.pdf"
+    ],
+    "plans": [
+     "603-0477232",
+     "603-0590729",
+     "tamal-1062",
+     "tamal-2023",
+     "tamal-2047"
+    ]
+   }
+  ],
+  "מגורים": [
+   {
+    "hex": "#ffdf7f",
+    "files": [
+     "public/plans/tamal-1062/docs/tashrit-2.pdf"
+    ],
+    "plans": [
+     "tamal-1062"
+    ]
+   }
+  ],
+  "מגורים ב": [
+   {
+    "hex": "#ffbf00",
+    "files": [
+     "public/plans/603-0590729/docs/tashrit.pdf"
+    ],
+    "plans": [
+     "603-0590729"
+    ]
+   }
+  ],
+  "מגורים ד": [
+   {
+    "hex": "#ff7f00",
+    "files": [
+     "public/plans/603-0477232/docs/tashrit.pdf",
+     "public/plans/603-0590729/docs/tashrit.pdf",
+     "public/plans/tamal-2023/docs/tashrit-1.pdf"
+    ],
+    "plans": [
+     "603-0477232",
+     "603-0590729",
+     "tamal-2023"
+    ]
+   }
+  ],
+  "מגורים ה": [
+   {
+    "hex": "#ff7f00",
+    "files": [
+     "public/plans/tamal-2047/docs/tashrit.pdf"
+    ],
+    "plans": [
+     "tamal-2047"
+    ]
+   }
+  ],
+  "מגורים מסחר ותעסוקה": [
+   {
+    "hex": "#9c9c9c",
+    "files": [
+     "public/plans/603-0477232/docs/tashrit.pdf",
+     "public/plans/tamal-2023/docs/tashrit-1.pdf"
+    ],
+    "plans": [
+     "603-0477232",
+     "tamal-2023"
+    ]
+   }
+  ],
+  "מסחר ומבנים ומוסדות ציבור": [
+   {
+    "hex": "#adadad",
+    "files": [
+     "public/plans/tamal-2047/docs/tashrit.pdf"
+    ],
+    "plans": [
+     "tamal-2047"
+    ]
+   }
+  ],
+  "מסחר ותעסוקה": [
+   {
+    "hex": "#adadad",
+    "files": [
+     "public/plans/603-0477232/docs/tashrit.pdf",
+     "public/plans/603-0590729/docs/tashrit.pdf",
+     "public/plans/tamal-1062/docs/tashrit-1.pdf",
+     "public/plans/tamal-1062/docs/tashrit-2.pdf"
+    ],
+    "plans": [
+     "603-0477232",
+     "603-0590729",
+     "tamal-1062"
+    ]
+   }
+  ],
+  "מרכז תחבורה": [
+   {
+    "hex": "#ff003f",
+    "files": [
+     "public/plans/tamal-1062/docs/tashrit-1.pdf"
+    ],
+    "plans": [
+     "tamal-1062"
+    ]
+   }
+  ],
+  "מתקנים הנדסיים": [
+   {
+    "hex": "#7f7fff",
+    "files": [
+     "public/plans/tamal-1062/docs/tashrit-1.pdf",
+     "public/plans/tamal-1062/docs/tashrit-2.pdf"
+    ],
+    "plans": [
+     "tamal-1062"
+    ]
+   }
+  ],
+  "ספורט ונופש": [
+   {
+    "hex": "#bfff00",
+    "files": [
+     "public/plans/tamal-1062/docs/tashrit-1.pdf",
+     "public/plans/tamal-1062/docs/tashrit-2.pdf"
+    ],
+    "plans": [
+     "tamal-1062"
+    ]
+   }
+  ],
+  "פארק/גן ציבורי": [
+   {
+    "hex": "#bfff00",
+    "files": [
+     "public/plans/tamal-1062/docs/tashrit-2.pdf"
+    ],
+    "plans": [
+     "tamal-1062"
+    ]
+   }
+  ],
+  "שביל": [
+   {
+    "hex": "#009972",
+    "files": [
+     "public/plans/tamal-1062/docs/tashrit-1.pdf",
+     "public/plans/tamal-1062/docs/tashrit-2.pdf"
+    ],
+    "plans": [
+     "tamal-1062"
+    ]
+   }
+  ],
+  "שטח ציבורי פתוח": [
+   {
+    "hex": "#bfff00",
+    "files": [
+     "public/plans/603-0477232/docs/tashrit.pdf",
+     "public/plans/603-0590729/docs/tashrit.pdf",
+     "public/plans/tamal-1062/docs/tashrit-1.pdf",
+     "public/plans/tamal-2023/docs/tashrit-1.pdf",
+     "public/plans/tamal-2023/docs/tashrit-2.pdf",
+     "public/plans/tamal-2047/docs/tashrit.pdf"
+    ],
+    "plans": [
+     "603-0477232",
+     "603-0590729",
+     "tamal-1062",
+     "tamal-2023",
+     "tamal-2047"
+    ]
+   }
+  ],
+  "תעסוקה": [
+   {
+    "hex": "#ff00c5",
+    "files": [
+     "public/plans/603-0477232/docs/tashrit.pdf"
+    ],
+    "plans": [
+     "603-0477232"
+    ]
+   }
+  ]
+ }
+}

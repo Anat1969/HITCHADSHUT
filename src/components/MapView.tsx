@@ -1,8 +1,10 @@
 import { useEffect, useMemo } from 'react'
-import { Circle, CircleMarker, GeoJSON, MapContainer, Marker, Pane, Popup, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet'
+import { Circle, CircleMarker, GeoJSON, MapContainer, Marker, Pane, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import type { Feature, FeatureCollection } from 'geojson'
 import 'leaflet/dist/leaflet.css'
+import QuietBase from './QuietBase'
+import { applyLeaflet } from '../lib/urban-standard/urban-standard.js'
 import type { LonLat, Project } from '../lib/types'
 import { BLUE_LINE } from '../lib/labels'
 import { BUILDING_COLOR, PLANS_APP_URL, fmtDate, type BuildingPlan } from '../lib/buildingPlans'
@@ -93,12 +95,9 @@ export default function MapView({
       attributionControl
       style={{ height: '100%', width: '100%' }}
     >
-      <TileLayer
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        maxZoom={19}
-      />
+      <QuietBase />
       <ZoomControlLeft />
+      <InteractionStandard />
       <ResizeWatcher />
       <FocusController focus={focus ?? null} />
       {onMapClick && <ClickCatcher onClick={onMapClick} />}
@@ -149,6 +148,13 @@ export default function MapView({
       {draftPin && <Marker position={[draftPin[1], draftPin[0]]} icon={meIcon} interactive={false} />}
     </MapContainer>
   )
+}
+
+// Map Interaction Standard (shared with PLANS-GH): same wheel, keys and click tolerance as every map.
+function InteractionStandard() {
+  const map = useMap()
+  useEffect(() => applyLeaflet(map, L).unbind, [map])
+  return null
 }
 
 function ZoomControlLeft() {

@@ -1,0 +1,52 @@
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>Map parity</title>
+<link rel="stylesheet" href="/hs/node_modules/leaflet/dist/leaflet.css"><link rel="stylesheet" href="/hs/node_modules/maplibre-gl/dist/maplibre-gl.css">
+<style>body{margin:0;display:grid;grid-template-columns:repeat(3,400px);gap:10px}div.m{width:400px;height:300px;position:relative;background:#eee}</style>
+<script src="/hs/node_modules/leaflet/dist/leaflet.js"></script>
+<script src="/pg/vendor/three.min.js"></script><script src="/pg/vendor/OrbitControls.js"></script>
+</head><body><div class="m" id="lf"></div><div class="m" id="ml"></div><div class="m" id="th"></div>
+<script type="module">
+import * as S from '/pg/standard/urban-standard.mjs';
+import * as maplibregl from '/hs/node_modules/maplibre-gl/dist/maplibre-gl.mjs';
+maplibregl.setWorkerUrl('/hs/node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs');
+const C = [34.65, 31.80], Z = 15;
+// Leaflet: no tiles needed (the contract is about the camera)
+const lf = L.map('lf', { zoomControl:false }).setView([C[1], C[0]], Z); window.__lf = lf;
+const lfStd = S.applyLeaflet(lf, L);
+let lfClicks = 0; lf.on('click', () => lfClicks++);
+// MapLibre: an empty style, no network
+const ml = new maplibregl.Map({ ...S.MAPLIBRE_OPTIONS, container:'ml', style:{ version:8, sources:{}, layers:[{ id:'bg', type:'background', paint:{ 'background-color':'#ddd' } }] }, center:C, zoom:Z, pitch:45, bearing:0, fadeDuration:0 }); window.__ml = ml;
+const mlStd = S.applyMapLibre(ml);
+let mlClicks = 0; ml.on('click', () => mlClicks++);
+// Three: ground plane in metres, camera 45 degrees, looking north
+const T = THREE, el = document.getElementById('th'), r = new T.WebGLRenderer(); r.setSize(400, 300); el.appendChild(r.domElement);
+const cam = new T.PerspectiveCamera(38, 400/300, 1, 100000), ctl = new T.OrbitControls(cam, r.domElement);
+cam.position.set(0, 800, 800); ctl.target.set(0, 0, 0); ctl.minDistance = 5; ctl.maxDistance = 20000; ctl.update();
+const thStd = S.applyOrbit(ctl, cam, r.domElement, T);
+let thClicks = 0; r.domElement.addEventListener('click', e => { if(thStd.guard.isClick(e)) thClicks++; });
+const scene = new T.Scene(); const tick = () => { ctl.update(); r.render(scene, cam); requestAnimationFrame(tick); }; tick();
+const deg = x => x * 180 / Math.PI;
+window.P = {
+  ready: () => new Promise(res => ml.loaded() ? res() : ml.once('load', res)),
+  state(){
+    const off = cam.position.clone().sub(ctl.target), sph = new T.Spherical().setFromVector3(off);
+    // bearing: direction the camera looks, clockwise from north (-z)
+    const look = ctl.target.clone().sub(cam.position); const bearing = ((deg(Math.atan2(look.x, -look.z)) % 360) + 360) % 360;
+    return {
+      lf:{ zoom:lf.getZoom(), center:lf.getCenter(), clicks:lfClicks },
+      ml:{ zoom:ml.getZoom(), bearing:ml.getBearing(), pitch:ml.getPitch(), center:ml.getCenter(), clicks:mlClicks },
+      th:{ dist:off.length(), bearing, pitch:deg(sph.phi), target:ctl.target.toArray(), clicks:thClicks },
+    };
+  },
+  // geo/ground point under a screen point (relative to each map's top-left)
+  under(px, py){
+    const g = (x, y) => { const rr = r.domElement.getBoundingClientRect(), ray = new T.Raycaster(); ray.setFromCamera({ x:x/rr.width*2-1, y:-y/rr.height*2+1 }, cam);
+      const p = new T.Vector3(); ray.ray.intersectPlane(new T.Plane(new T.Vector3(0,1,0), 0), p); return [p.x, p.z]; };
+    const a = lf.containerPointToLatLng([px, py]), b = ml.unproject([px, py]);
+    return { lf:[a.lng, a.lat], ml:[b.lng, b.lat], th:g(px, py) };
+  },
+  screenOf(){ const c = cam.clone(); const v = new T.Vector3(...arguments[0]).project(cam); return [(v.x+1)/2*400, (1-v.y)/2*300]; },
+  reset(){ lf.setView([C[1], C[0]], Z, { animate:false }); ml.jumpTo({ center:C, zoom:Z, pitch:45, bearing:0 }); cam.position.set(0, 800, 800); ctl.target.set(0,0,0); ctl.update(); lfClicks = mlClicks = thClicks = 0; },
+  ACTIONS:S.ACTIONS, I:S.INTERACTION,
+};
+window.READY = true;
+</script></body></html>
