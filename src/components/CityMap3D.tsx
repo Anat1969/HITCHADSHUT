@@ -5,6 +5,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import type { FeatureCollection } from 'geojson'
 import { bboxOf } from '../lib/geo'
+import { applyMapLibre, LOOK, MAPLIBRE_OPTIONS } from '../lib/urban-standard/urban-standard.js'
 import { BLUE_LINE } from '../lib/labels'
 import { landUseColor } from '../lib/mapColors'
 import { BUILDING_COLOR, type BuildingPlan } from '../lib/buildingPlans'
@@ -39,7 +40,8 @@ export interface CityTwinModel {
   plans: CityPlan[]
 }
 
-export const STAGE_COLOR: Record<Stage, string> = { approved: '#3D3D3B', planning: '#4A6FD8' }
+// Stage is told by tone, opacity and the dashed boundary, never by blue: blue is the plan boundary (shared standard, LOOK).
+export const STAGE_COLOR: Record<Stage, string> = { approved: '#3D3D3B', planning: '#9C9B97' }
 
 interface Props {
   twin: CityTwinModel
@@ -73,6 +75,7 @@ export default function CityMap3D({ twin, view, color, focus, onPick, buildingPl
       bboxOf({ type: 'FeatureCollection', features: twin.boundaries.features.filter((f) => homes.has(f.properties?.plan_number)) }) ??
       bboxOf(twin.boundaries)!
     const map = new maplibregl.Map({
+      ...MAPLIBRE_OPTIONS,
       container: el.current,
       style: BASE_STYLE_URL,
       bounds: [
@@ -82,12 +85,13 @@ export default function CityMap3D({ twin, view, color, focus, onPick, buildingPl
       fitBoundsOptions: { padding: 40 },
       pitch: 55,
       bearing: -24,
-      maxPitch: 75,
       attributionControl: { compact: true },
       canvasContextAttributes: { antialias: true },
     })
     mapRef.current = map
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true, showCompass: true }), 'top-left')
+    // Map Interaction Standard (shared with PLANS-GH): same mouse, touch and keys in every map.
+    const std = applyMapLibre(map, { clear: () => pickRef.current(null) })
     // The page can switch to full screen: keep the canvas the size of its box.
     const ro = new ResizeObserver(() => map.resize())
     ro.observe(el.current)
@@ -153,7 +157,7 @@ export default function CityMap3D({ twin, view, color, focus, onPick, buildingPl
             'fill-extrusion-color': STAGE_COLOR[stage],
             'fill-extrusion-height': 0,
             'fill-extrusion-base': 0,
-            'fill-extrusion-opacity': stage === 'approved' ? 0.95 : 0.78,
+            'fill-extrusion-opacity': stage === 'approved' ? LOOK.approved.opacity! : 0.6,
             'fill-extrusion-vertical-gradient': true,
           },
         })
@@ -168,7 +172,8 @@ export default function CityMap3D({ twin, view, color, focus, onPick, buildingPl
         const vol = hits.find((f) => f.layer.id !== 'boundary-fill')
         const pns = hits.map((f) => String(f.properties?.plan_number ?? '')).filter(Boolean)
         const pn = vol?.properties?.plan_number ?? pns.sort((a, b) => area(a) - area(b))[0]
-        if (pn) pickRef.current(String(pn))
+        // Standard: a click on empty ground clears the selection.
+        pickRef.current(pn ? String(pn) : null)
       }
       map.on('click', pick)
       for (const id of ['massing-approved', 'massing-planning', 'boundary-fill']) {
@@ -183,6 +188,7 @@ export default function CityMap3D({ twin, view, color, focus, onPick, buildingPl
     return () => {
       if (anim.current) cancelAnimationFrame(anim.current)
       ro.disconnect()
+      std.unbind()
       map.remove()
       mapRef.current = null
     }

@@ -1,4 +1,5 @@
 import type { FeedbackKind, ProjectKind, ProjectStatus, RenewalTrack } from './types'
+import { BLUE_LINE as STD_BLUE_LINE, LAND_USE as STD_LAND_USE, landUseColor } from './urban-standard/urban-standard.js'
 
 export const KIND_LABEL: Record<ProjectKind, string> = {
   urban_renewal: 'התחדשות עירונית',
@@ -58,17 +59,17 @@ export const FEEDBACK_PROMPT: Record<FeedbackKind, string> = {
   idea: 'איזה רעיון יכול לשפר את הפרויקט או את המרחב סביבו?',
 }
 
-/** Plan boundaries ("the blue line") are drawn in blue on every map, as on plan drawings. */
-export const BLUE_LINE = '#1D4ED8'
+/** Plan boundaries ("the blue line") are drawn in blue on every map, as on plan drawings. From the shared standard. */
+export const BLUE_LINE = STD_BLUE_LINE
 
-/** Land-use colours in the 3D model, close to the planning-portal palette. The key is massing/parcels `cat`. */
-export const LAND_USE: Record<string, { label: string; color: string }> = {
-  residential: { label: 'מגורים', color: '#E2AE48' },
-  mixed: { label: 'מגורים ומסחר', color: '#D4834A' },
-  commerce: { label: 'מסחר', color: '#B85C98' },
-  employment: { label: 'תעסוקה', color: '#7A63B4' },
-  industry: { label: 'נמל, תעשייה ואחסנה', color: '#5E8299' },
-  public: { label: 'מבני ציבור', color: '#9A6A4C' },
-  open: { label: 'שטח פתוח', color: '#6EA65F' },
-  road: { label: 'דרכים, שבילים וחניה', color: '#A8A8A6' },
-}
+/**
+ * Land-use colours, from the shared urban-twin standard (src/lib/urban-standard, copied from PLANS-GH).
+ * The colours are the Mavat legend swatches read from the tashrits in public/plans (verified when the same
+ * colour repeats across plans). A category without a verified colour is neutral and says "לבדיקה".
+ */
+export const LAND_USE: Record<string, { label: string; color: string; verified: string }> = Object.fromEntries(
+  Object.entries(STD_LAND_USE).map(([k, v]) => [
+    k,
+    { label: v.verified === 'pending' ? `${v.label} (צבע לבדיקה)` : v.label, color: landUseColor(k), verified: v.verified },
+  ]),
+)

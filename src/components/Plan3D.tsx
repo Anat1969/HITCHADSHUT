@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as maplibregl from 'maplibre-gl'
 import type { Map as MlMap } from 'maplibre-gl'
+import { applyMapLibre, MAPLIBRE_OPTIONS } from '../lib/urban-standard/urban-standard.js'
 import 'maplibre-gl/dist/maplibre-gl.css'
 // Vite bundles the map worker (with its shared chunk) and gives us its URL.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
@@ -36,6 +37,7 @@ export default function Plan3D({ model, mode, selectedLot, onSelectLot }: Props)
     if (!el.current) return
     const b = bboxOf(model.boundary)!
     const map = new maplibregl.Map({
+      ...MAPLIBRE_OPTIONS,
       container: el.current,
       style: BASE_STYLE_URL,
       bounds: [
@@ -45,12 +47,13 @@ export default function Plan3D({ model, mode, selectedLot, onSelectLot }: Props)
       fitBoundsOptions: { padding: 60 },
       pitch: 58,
       bearing: -24,
-      maxPitch: 75,
       attributionControl: { compact: true },
       canvasContextAttributes: { antialias: true },
     })
     mapRef.current = map
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true, showCompass: true }), 'top-left')
+    // Map Interaction Standard (shared with PLANS-GH): same mouse, touch and keys in every map.
+    const std = applyMapLibre(map)
 
     map.on('load', () => {
       map.setLight({ anchor: 'map', position: [1.4, 215, 35], color: '#FFFFFF', intensity: 0.42 })
@@ -158,6 +161,7 @@ export default function Plan3D({ model, mode, selectedLot, onSelectLot }: Props)
     })
     return () => {
       if (anim.current) cancelAnimationFrame(anim.current)
+      std.unbind()
       map.remove()
       mapRef.current = null
     }
