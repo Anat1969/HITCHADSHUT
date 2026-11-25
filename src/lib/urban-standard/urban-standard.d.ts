@@ -30,3 +30,7 @@ export function applyLeaflet(map: unknown, L: unknown, h?: Hooks): Applied
 export const MAPLIBRE_OPTIONS: { clickTolerance: number; maxPitch: number; boxZoom: boolean; keyboard: boolean }
 export function applyMapLibre(map: unknown, h?: Hooks): Applied
 export function applyOrbit(ctl: unknown, cam: unknown, el: HTMLElement, T: unknown, h?: Hooks & { groundY?: () => number; changed?: () => void }): Applied
+export const REP_LEVELS: Record<1 | 2 | 3 | 4, { label: string; content: string; purpose: string }>
+export const WORK_MODES: Record<'planning' | 'architectural' | 'experiential', { label: string; levels: number[]; show: string }>
+export const PROVENANCE: Record<'verified' | 'plan' | 'computed' | 'illustration' | 'missing', { label: string; note: string }>
+export const ENRICH_RULES: { id: string; when: string; add: string; level: number; prov: string }[]
