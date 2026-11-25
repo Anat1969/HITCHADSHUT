@@ -180,6 +180,12 @@ export default function CityTwin() {
           תוכניות בינוי
         </li>
       )}
+      {showBuilding && view !== 'today' && buildingPlans.some((b) => b.model?.length) && (
+        <li title="מתוך תוכניות האדריכל (PLANS-GH). מחליף את נפח התב&quot;ע במגרשים שהוא מכסה">
+          <i style={{ background: '#E9E2D3', outline: '1px solid #b9b3a6' }} />
+          מודל תוכנית בינוי
+        </li>
+      )}
       {color === 'stage' ? (
         <>
           <li>
