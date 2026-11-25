@@ -153,6 +153,9 @@
 5. **מפת דף הבית בלי כיתובים** (`src/components/QuietBase.tsx`): סגנון OpenFreeMap positron בלי שכבות הטקסט (`symbol`), בתוך Leaflet דרך `@maplibre/maplibre-gl-leaflet`. אם הסגנון לא נטען: OSM רגיל. ממצא: Esri Light Gray Base מציג שמות רחובות מרמה 16, ו-CARTO דורש מפתח.
 6. **בדיקת זהות:** `node tests/map-parity.cjs ../PLANS-GH`: Leaflet, MapLibre ו-Three באותו דף, אותן פעולות. 38 מתוך 38.
 7. **ההחלטות שממתינות לענת** (ברונזה בשתי משמעויות, בסיס מסחרי מתחת למגורים, מיגרציה למסד): `docs/urban-twin/README.md` ב-PLANS-GH.
+8. **כל תוכניות הבינוי ממקור אחד** (`loadBuildingPlans` ב-`src/lib/buildingPlans.ts`): `public/building-twin.json` (43 תוכניות מ-PLANS-GH, מועתק ב-`sync.mjs`) ועליו החלטת הוועדה מ-`public/building-plans.json`. רשומה אחת לכל מספר תוכנית בינוי, בלי כפילות.
+9. **המודל המפורט של תוכנית בינוי** (שכבת `building-model` במודל העיר, בצבע שמנת): מחליף את נפח התב"ע שמרכזו בתוכו (`replaced`), והשאר נשאר. לא מוצג במצב "קיים". היום: 4 תוכניות (1887, 1909, 1911, 1913).
+10. **היקף (ענת, 25.11.2026):** התקן חל על כל התוכניות ב-ASHDODMAP ועל פרויקטים אדריכליים ב-CULTURA. מצבי העבודה וההמחשה: `docs/urban-twin/visualization.md` ב-PLANS-GH.
 
 ## A&I logo button
 The top bar holds only the app name (links home), content navigation (מודל העיר, כתבות), the municipality logo, and ONE logo button "אד' ענת שטיבלמן A&I" (`<ai-menu>` from https://appofapp-gh.vercel.app/ai-menu.js). Every editing and development action (העתקת קישור, שיחת הפיתוח, פרויקט המחקר, התקנת האפליקציה, סרטון מודל העיר, ניהול, edit mode, add, delete) lives only inside it, never as loose buttons. Standard: https://github.com/Anat1969/AppOfApp-GH/blob/main/docs/ai-menu-standard.md
