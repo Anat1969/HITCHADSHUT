@@ -16,11 +16,13 @@ export interface BuildingPlan {
   status?: 'אושרה' | 'בטיפול' | 'בהכנה'
   place?: string | null
   /** Where the geometry comes from: the detailed model, TABA volumes of the lots, the whole TABA, or GIS parcels. */
-  source?: 'model' | 'lots' | 'taba' | 'parcels' | null
+  source?: 'model' | 'lots' | 'taba' | 'parcels' | 'xplan' | 'municipal' | null
   /** Provenance in the shared standard: plan (from the plan's drawings), computed (estimate), verified (GIS). */
   prov?: 'plan' | 'computed' | 'verified' | null
   /** Detailed model: per building, floor blocks [ring (lng, lat), base m, top m]. */
   model?: { id: string; label?: string; s: [[number, number][], number, number][] }[]
+  /** Estimated volume from table 5 of the TABA (lot x coverage, to the maximal height), for plans whose TABA has no plan_models. */
+  estimate?: { lot: string; cat: string; base: number; top: number; floors: number; r: [number, number][]; ref: string }[]
 }
 
 export const BUILDING_COLOR = '#9A6B3F' // bronze, as in PLANS-GH
@@ -56,6 +58,7 @@ export function loadBuildingPlans(): Promise<BuildingPlan[]> {
         source: t.geometry ? t.source : old?.geometry ? 'parcels' : null,
         prov: t.prov ?? (old?.geometry ? 'verified' : null),
         model: t.model,
+        estimate: t.estimate,
       })
     }
     return [...byNum.values()]
@@ -72,6 +75,13 @@ export function modelFeatures(plans: BuildingPlan[]) {
         if (i === 0) foot.push(ring)
         blocks.push({ type: 'Feature', properties: { plan_number: p.plan_number, building: b.label ?? b.id, base: y0, top: y1, prov: 'plan' }, geometry: { type: 'Polygon', coordinates: [[...ring, ring[0]]] } })
       })
+  // Table-5 estimates: only where there is no detailed model and no TABA volume in the city twin (an estimate, marked 'computed')
+  for (const p of plans)
+    if (!p.model?.length)
+      for (const e of p.estimate ?? []) {
+        foot.push(e.r)
+        blocks.push({ type: 'Feature', properties: { plan_number: p.plan_number, building: 'מגרש ' + e.lot, base: e.base, top: e.top, prov: 'computed' }, geometry: { type: 'Polygon', coordinates: [[...e.r, e.r[0]]] } })
+      }
   return { blocks, foot }
 }
 

@@ -186,6 +186,12 @@ export default function CityTwin() {
           מודל תוכנית בינוי
         </li>
       )}
+      {showBuilding && view !== 'today' && buildingPlans.some((b) => b.estimate?.length && !b.model?.length) && (
+        <li title="תוכניות בינוי שהתב&quot;ע שלהן עוד לא במודל העיר: המגרש מ-Xplan, והנפח לפי טבלה 5 בהוראות (תכסית וגובה מרבי)">
+          <i style={{ background: '#D8D0BF', outline: '1px dashed #b9b3a6' }} />
+          תוכנית בינוי, נפח לפי טבלה 5 (הערכה)
+        </li>
+      )}
       {color === 'stage' ? (
         <>
           <li>
