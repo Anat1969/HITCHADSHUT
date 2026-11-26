@@ -189,7 +189,7 @@ export default function CityMap3D({ twin, view, color, focus, onPick, buildingPl
         id: 'building-model',
         type: 'fill-extrusion',
         source: 'building-model',
-        paint: { 'fill-extrusion-color': '#E9E2D3', 'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-opacity': 0.96, 'fill-extrusion-vertical-gradient': true },
+        paint: { 'fill-extrusion-color': ['case', ['==', ['get', 'prov'], 'computed'], '#D8D0BF', '#E9E2D3'], 'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-opacity': 0.96, 'fill-extrusion-vertical-gradient': true },
       })
       setReady(true)
     })
